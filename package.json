@@ -6,16 +6,32 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "init": "node scripts/init-data.js"
+    "init": "node database/migrate.js",
+    "test": "mocha tests/**/*.test.js",
+    "test:security": "mocha tests/security.test.js",
+    "test:watch": "mocha tests/**/*.test.js --watch",
+    "backup": "node database/backup-cli.js full",
+    "backup:auto": "node database/backup-cli.js auto",
+    "migrate": "node database/migrate.js",
+    "db:stats": "node -e \"const db = require('./database/database'); const d = new db(); d.initialize().then(() => d.getDatabaseStats().then(console.log).finally(() => d.close()));\""
   },
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "bcryptjs": "^2.4.3",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "sqlite3": "^5.1.6",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.0.1",
+    "dotenv": "^16.3.1"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "mocha": "^10.2.0",
+    "chai": "^4.3.10",
+    "supertest": "^6.3.3",
+    "sinon": "^17.0.1"
   },
   "keywords": ["basketball", "booking", "courts", "local"],
   "author": "Basketball Academy",

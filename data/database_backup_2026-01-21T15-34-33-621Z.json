@@ -1,0 +1,93 @@
+{
+  "users": [
+    {
+      "id": "admin_001",
+      "name": "Admin User",
+      "email": "admin@basketball.com",
+      "password": "$2a$10$L/ZM7Je38DLJ8kwGO57qVuSdLgQ5hf8WVprlp8818ptYU643Bb.4m",
+      "phone": "9876543210",
+      "role": "admin",
+      "createdAt": "2026-01-21T10:09:12.674Z"
+    },
+    {
+      "id": "user_001",
+      "name": "Rahul Sharma",
+      "email": "rahul@example.com",
+      "password": "$2a$10$pVAx9rnkXa3RWs9dOB7DfO7Kmiu35Oz1NERWBUoHeFpP4w7w4Vbjy",
+      "phone": "9876543211",
+      "role": "user",
+      "createdAt": "2026-01-21T10:09:12.757Z"
+    },
+    {
+      "id": "user_002",
+      "name": "Priya Patel",
+      "email": "priya@example.com",
+      "password": "$2a$10$nor8Ej9YzHxO6It2ZytcYONf/53tAhgs686Bdxd3WkqfmC10HSlP2",
+      "phone": "9876543212",
+      "role": "user",
+      "createdAt": "2026-01-21T10:09:12.829Z"
+    }
+  ],
+  "courts": [
+    {
+      "id": "court_001",
+      "name": "Main Court",
+      "location": "Building A - Ground Floor",
+      "description": "Professional hardwood court with NBA standards",
+      "pricePerHour": 500,
+      "amenities": "Scoreboard, Lights, Changing Room, Water Fountain",
+      "capacity": 10,
+      "imageUrl": "/images/court1.jpg",
+      "isActive": true
+    },
+    {
+      "id": "court_002",
+      "name": "Training Court B",
+      "location": "Building B - First Floor",
+      "description": "Smaller court perfect for group training",
+      "pricePerHour": 300,
+      "amenities": "Lights, Training Equipment, Water Fountain",
+      "capacity": 6,
+      "imageUrl": "/images/court2.jpg",
+      "isActive": true
+    },
+    {
+      "id": "court_003",
+      "name": "Half Court C",
+      "location": "Outdoor Area",
+      "description": "Outdoor half-court with adjustable hoops",
+      "pricePerHour": 200,
+      "amenities": "Lights, Water Fountain, Restrooms",
+      "capacity": 5,
+      "imageUrl": "/images/court3.jpg",
+      "isActive": true
+    }
+  ],
+  "bookings": [
+    {
+      "id": "booking_001",
+      "userId": "user_001",
+      "courtId": "court_001",
+      "date": "2026-01-21",
+      "startTime": "09:00",
+      "endTime": "11:00",
+      "status": "confirmed",
+      "totalPrice": 1000,
+      "paymentId": "PAY_001",
+      "createdAt": "2026-01-21T10:09:12.829Z"
+    },
+    {
+      "id": "booking_002",
+      "userId": "user_002",
+      "courtId": "court_002",
+      "date": "2026-01-22",
+      "startTime": "14:00",
+      "endTime": "16:00",
+      "status": "pending",
+      "totalPrice": 600,
+      "paymentId": null,
+      "createdAt": "2026-01-21T10:09:12.829Z"
+    }
+  ],
+  "sessions": []
+}

@@ -3,460 +3,797 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
-const fs = require('fs');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const { body, validationResult } = require('express-validator');
+require('dotenv').config();
 
+const Database = require('./database/database');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.static('.'));
+// Initialize database
+const db = new Database();
 
-// Data Storage (in-memory with file backup)
-const DATA_FILE = './data/database.json';
+// Security middleware
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "https://cdn.tailwindcss.com"],
+            scriptSrc: ["'self'"],
+            imgSrc: ["'self'", "data:", "https:"],
+            connectSrc: ["'self'"],
+            fontSrc: ["'self'"],
+            objectSrc: ["'none'"],
+            mediaSrc: ["'self'"],
+            frameSrc: ["'none'"]
+        }
+    },
+    hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true
+    }
+}));
 
-// Initialize data
-let data = {
-  users: [],
-  courts: [],
-  bookings: [],
-  sessions: []
-};
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false
+});
 
-// Load data from file
-function loadData() {
-  if (fs.existsSync(DATA_FILE)) {
-    const fileData = fs.readFileSync(DATA_FILE, 'utf8');
-    data = JSON.parse(fileData);
-  } else {
-    initializeData();
-  }
-}
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // limit each IP to 5 auth requests per windowMs
+    message: 'Too many authentication attempts, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+    skipSuccessfulRequests: true
+});
 
-// Save data to file
-function saveData() {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-}
+// CORS configuration
+app.use(cors({
+    origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:3000'],
+    credentials: true,
+    optionsSuccessStatus: 200
+}));
 
-// Initialize default data
-function initializeData() {
-  data = {
-    users: [
-      {
-        id: 'admin_001',
-        name: 'Admin User',
-        email: 'admin@basketball.com',
-        password: bcrypt.hashSync('admin123', 10),
-        phone: '9876543210',
-        role: 'admin',
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: 'user_001',
-        name: 'Rahul Sharma',
-        email: 'rahul@example.com',
-        password: bcrypt.hashSync('user123', 10),
-        phone: '9876543211',
-        role: 'user',
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: 'user_002',
-        name: 'Priya Patel',
-        email: 'priya@example.com',
-        password: bcrypt.hashSync('user123', 10),
-        phone: '9876543212',
-        role: 'user',
-        createdAt: new Date().toISOString()
-      }
-    ],
-    courts: [
-      {
-        id: 'court_001',
-        name: 'Main Court',
-        location: 'Building A - Ground Floor',
-        description: 'Professional hardwood court with NBA standards',
-        pricePerHour: 500,
-        amenities: 'Scoreboard, Lights, Changing Room, Water Fountain',
-        capacity: 10,
-        imageUrl: '/images/court1.jpg',
-        isActive: true
-      },
-      {
-        id: 'court_002',
-        name: 'Training Court B',
-        location: 'Building B - First Floor',
-        description: 'Smaller court perfect for group training',
-        pricePerHour: 300,
-        amenities: 'Lights, Training Equipment, Water Fountain',
-        capacity: 6,
-        imageUrl: '/images/court2.jpg',
-        isActive: true
-      },
-      {
-        id: 'court_003',
-        name: 'Half Court C',
-        location: 'Outdoor Area',
-        description: 'Outdoor half-court with adjustable hoops',
-        pricePerHour: 200,
-        amenities: 'Lights, Water Fountain, Restrooms',
-        capacity: 5,
-        imageUrl: '/images/court3.jpg',
-        isActive: true
-      }
-    ],
-    bookings: [
-      {
-        id: 'booking_001',
-        userId: 'user_001',
-        courtId: 'court_001',
-        date: '2026-01-21',
-        startTime: '09:00',
-        endTime: '11:00',
-        status: 'confirmed',
-        totalPrice: 1000,
-        paymentId: 'PAY_001',
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: 'booking_002',
-        userId: 'user_002',
-        courtId: 'court_002',
-        date: '2026-01-22',
-        startTime: '14:00',
-        endTime: '16:00',
-        status: 'pending',
-        totalPrice: 600,
-        paymentId: null,
-        createdAt: new Date().toISOString()
-      }
-    ],
-    sessions: []
-  };
-  saveData();
-}
+// General middleware
+app.use(limiter);
+app.use(express.json({ limit: '1mb' }));
+app.use(express.static('public'));
+
+// Request logging middleware
+app.use(async (req, res, next) => {
+    const start = Date.now();
+    
+    res.on('finish', async () => {
+        const duration = Date.now() - start;
+        
+        // Log audit event for sensitive operations
+        if (['POST', 'PUT', 'DELETE'].includes(req.method) && req.path.startsWith('/api/')) {
+            await db.logAuditEvent({
+                user_id: req.user?.id,
+                event_type: `${req.method} ${req.path}`,
+                event_description: `${req.method} request to ${req.path}`,
+                ip_address: req.ip,
+                user_agent: req.get('User-Agent'),
+                success: res.statusCode < 400,
+                error_message: res.statusCode >= 400 ? `HTTP ${res.statusCode}` : null
+            });
+        }
+        
+        console.log(`${req.method} ${req.path} - ${res.statusCode} - ${duration}ms`);
+    });
+    
+    next();
+});
 
 // Authentication middleware
-function authenticate(req, res, next) {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) {
-    return res.status(401).json({ error: 'No token provided' });
-  }
+async function authenticate(req, res, next) {
+    try {
+        const token = req.headers.authorization?.split(' ')[1] || req.cookies?.accessToken;
+        
+        if (!token) {
+            return res.status(401).json({ 
+                success: false,
+                message: 'Authentication required' 
+            });
+        }
 
-  const session = data.sessions.find(s => s.token === token && s.expiresAt > new Date().toISOString());
-  if (!session) {
-    return res.status(401).json({ error: 'Invalid or expired token' });
-  }
+        const session = await db.getSessionByToken(token);
+        
+        if (!session) {
+            return res.status(401).json({ 
+                success: false,
+                message: 'Invalid or expired token' 
+            });
+        }
 
-  req.user = data.users.find(u => u.id === session.userId);
-  next();
-}
-
-// Helper functions
-function getAvailableSlots(courtId, date) {
-  const bookings = data.bookings.filter(b => 
-    b.courtId === courtId && 
-    b.date === date && 
-    b.status !== 'cancelled'
-  );
-
-  const slots = [];
-  for (let hour = 6; hour <= 22; hour++) {
-    const timeSlot = `${hour.toString().padStart(2, '0')}:00`;
-    const isBooked = bookings.some(b => 
-      timeSlot >= b.startTime && timeSlot < b.endTime
-    );
-    
-    if (!isBooked) {
-      slots.push(timeSlot);
+        // Update last used time
+        await db.run('UPDATE sessions SET last_used_at = CURRENT_TIMESTAMP WHERE token = ?', [token]);
+        
+        req.user = {
+            id: session.user_id,
+            name: session.user_name,
+            email: session.user_email,
+            role: session.role
+        };
+        
+        next();
+    } catch (error) {
+        console.error('Authentication error:', error);
+        res.status(500).json({ 
+            success: false,
+            message: 'Authentication error' 
+        });
     }
-  }
-
-  return slots;
 }
+
+// Admin authorization middleware
+function requireAdmin(req, res, next) {
+    if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ 
+            success: false,
+            message: 'Admin access required' 
+        });
+    }
+    next();
+}
+
+// Validation middleware
+const validateRegistration = [
+    body('name')
+        .trim()
+        .isLength({ min: 2, max: 50 })
+        .withMessage('Name must be between 2 and 50 characters')
+        .matches(/^[a-zA-Z\s'-]+$/)
+        .withMessage('Name can only contain letters, spaces, hyphens, and apostrophes'),
+    
+    body('email')
+        .trim()
+        .normalizeEmail()
+        .isEmail()
+        .withMessage('Please provide a valid email address')
+        .isLength({ max: 255 })
+        .withMessage('Email address too long'),
+    
+    body('phone')
+        .optional()
+        .trim()
+        .isMobilePhone('any', { strictMode: false })
+        .withMessage('Please provide a valid phone number'),
+    
+    body('password')
+        .isLength({ min: 12, max: 128 })
+        .withMessage('Password must be between 12 and 128 characters')
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+        .withMessage('Password must contain uppercase, lowercase, number, and special character'),
+    
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Validation failed',
+                errors: errors.array().map(error => ({
+                    field: error.param,
+                    message: error.msg
+                }))
+            });
+        }
+        next();
+    }
+];
+
+const validateLogin = [
+    body('email')
+        .trim()
+        .normalizeEmail()
+        .isEmail()
+        .withMessage('Please provide a valid email address'),
+    
+    body('password')
+        .notEmpty()
+        .withMessage('Password is required'),
+    
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Validation failed',
+                errors: errors.array()
+            });
+        }
+        next();
+    }
+];
 
 // API Routes
 
-// Auth Routes
-app.post('/api/auth/register', async (req, res) => {
-  try {
-    const { name, email, phone, password } = req.body;
-
-    if (data.users.find(u => u.email === email)) {
-      return res.status(400).json({ error: 'Email already registered' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = {
-      id: 'user_' + Date.now(),
-      name,
-      email,
-      phone: phone || null, // Make phone optional
-      password: hashedPassword,
-      role: 'user',
-      createdAt: new Date().toISOString()
-    };
-
-    data.users.push(user);
-    saveData();
-
-    const { password: _, ...userWithoutPassword } = user;
-    res.json({ success: true, user: userWithoutPassword });
-  } catch (error) {
-    res.status(500).json({ error: 'Registration failed' });
-  }
-});
-
-app.post('/api/auth/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    const user = data.users.find(u => u.email === email);
-    if (!user || !await bcrypt.compare(password, user.password)) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    const token = uuidv4();
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 days
-
-    data.sessions.push({ token, userId: user.id, expiresAt });
-    saveData();
-
-    const { password: _, ...userWithoutPassword } = user;
-    res.json({ 
-      success: true, 
-      user: userWithoutPassword, 
-      token,
-      expiresAt 
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Login failed' });
-  }
-});
-
-app.post('/api/auth/logout', (req, res) => {
-  const { token } = req.body;
-  data.sessions = data.sessions.filter(s => s.token !== token);
-  saveData();
-  res.json({ success: true });
-});
-
-app.get('/api/auth/me', authenticate, (req, res) => {
-  const { password: _, ...userWithoutPassword } = req.user;
-  res.json({ user: userWithoutPassword });
-});
-
-// Courts Routes
-app.get('/api/courts', (req, res) => {
-  res.json({ 
-    courts: data.courts.filter(c => c.isActive) 
-  });
-});
-
-app.get('/api/courts/:id', (req, res) => {
-  const court = data.courts.find(c => c.id === req.params.id);
-  if (!court) {
-    return res.status(404).json({ error: 'Court not found' });
-  }
-  res.json({ court });
-});
-
-app.get('/api/courts/:id/availability/:date', (req, res) => {
-  const { id, date } = req.params;
-  const availableSlots = getAvailableSlots(id, date);
-  res.json({ availableSlots });
-});
-
-// Bookings Routes
-app.get('/api/bookings', authenticate, (req, res) => {
-  const userBookings = data.bookings.filter(b => b.userId === req.user.id);
-  
-  const bookingsWithDetails = userBookings.map(booking => {
-    const court = data.courts.find(c => c.id === booking.courtId);
-    return {
-      ...booking,
-      court: court ? {
-        id: court.id,
-        name: court.name,
-        location: court.location
-      } : null
-    };
-  });
-
-  res.json({ bookings: bookingsWithDetails });
-});
-
-app.post('/api/bookings', authenticate, (req, res) => {
-  try {
-    const { courtId, date, startTime, endTime } = req.body;
-
-    // Check if court exists
-    const court = data.courts.find(c => c.id === courtId);
-    if (!court) {
-      return res.status(404).json({ error: 'Court not found' });
-    }
-
-    // Check if slots are available
-    const availableSlots = getAvailableSlots(courtId, date);
-    const requestedSlots = [];
-    for (let hour = parseInt(startTime.split(':')[0]); hour < parseInt(endTime.split(':')[0]); hour++) {
-      requestedSlots.push(`${hour.toString().padStart(2, '0')}:00`);
-    }
-
-    const isSlotAvailable = requestedSlots.every(slot => availableSlots.includes(slot));
-    if (!isSlotAvailable) {
-      return res.status(400).json({ error: 'Requested slot is not available' });
-    }
-
-    // Calculate price
-    const hours = parseInt(endTime.split(':')[0]) - parseInt(startTime.split(':')[0]);
-    const totalPrice = hours * court.pricePerHour;
-
-    // Create booking
-    const booking = {
-      id: 'booking_' + Date.now(),
-      userId: req.user.id,
-      courtId,
-      date,
-      startTime,
-      endTime,
-      status: 'pending',
-      totalPrice,
-      paymentId: null,
-      createdAt: new Date().toISOString()
-    };
-
-    data.bookings.push(booking);
-    saveData();
-
-    res.json({ 
-      success: true, 
-      booking: {
-        ...booking,
-        court: {
-          id: court.id,
-          name: court.name,
-          location: court.location
+// Authentication routes
+app.post('/api/auth/register', authLimiter, validateRegistration, async (req, res) => {
+    try {
+        const { name, email, phone, password } = req.body;
+        
+        // Check if user already exists
+        const existingUser = await db.getUserByEmail(email);
+        if (existingUser) {
+            return res.status(409).json({
+                success: false,
+                message: 'Email already registered'
+            });
         }
-      }
+        
+        // Create new user
+        const userId = uuidv4();
+        const user = await db.createUser({
+            id: userId,
+            name,
+            email,
+            password,
+            phone,
+            role: 'user'
+        });
+        
+        // Log registration event
+        await db.logAuditEvent({
+            user_id: userId,
+            event_type: 'user_registration',
+            event_description: 'New user registered',
+            ip_address: req.ip,
+            user_agent: req.get('User-Agent'),
+            resource_id: userId,
+            resource_type: 'user',
+            new_values: { name, email, phone }
+        });
+        
+        // Remove password from response
+        const { password: _, ...userResponse } = user;
+        
+        res.status(201).json({
+            success: true,
+            message: 'User registered successfully',
+            user: userResponse
+        });
+        
+    } catch (error) {
+        console.error('Registration error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Registration failed. Please try again.'
+        });
+    }
+});
+
+app.post('/api/auth/login', authLimiter, validateLogin, async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        
+        // Find user by email
+        const user = await db.getUserByEmail(email);
+        if (!user) {
+            await db.logAuditEvent({
+                event_type: 'login_failure',
+                event_description: 'Login attempt with non-existent email',
+                ip_address: req.ip,
+                user_agent: req.get('User-Agent'),
+                success: false,
+                error_message: 'User not found'
+            });
+            
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid email or password'
+            });
+        }
+        
+        // Check if account is locked
+        if (user.locked_until && new Date(user.locked_until) > new Date()) {
+            return res.status(423).json({
+                success: false,
+                message: 'Account temporarily locked due to too many failed attempts'
+            });
+        }
+        
+        // Verify password
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        if (!isValidPassword) {
+            await db.incrementLoginAttempts(email);
+            
+            // Lock account after too many attempts
+            if (user.login_attempts >= 4) {
+                const lockedUntil = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+                await db.run('UPDATE users SET locked_until = ? WHERE id = ?', [lockedUntil.toISOString(), user.id]);
+            }
+            
+            await db.logAuditEvent({
+                user_id: user.id,
+                event_type: 'login_failure',
+                event_description: 'Login attempt with invalid password',
+                ip_address: req.ip,
+                user_agent: req.get('User-Agent'),
+                success: false,
+                error_message: 'Invalid password'
+            });
+            
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid email or password'
+            });
+        }
+        
+        // Update last login and reset login attempts
+        await db.updateUserLastLogin(user.id);
+        
+        // Create session token
+        const sessionId = uuidv4();
+        const token = uuidv4();
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+        
+        await db.createSession({
+            id: sessionId,
+            user_id: user.id,
+            token: token,
+            expires_at: expiresAt.toISOString(),
+            ip_address: req.ip,
+            user_agent: req.get('User-Agent')
+        });
+        
+        // Log successful login
+        await db.logAuditEvent({
+            user_id: user.id,
+            event_type: 'login_success',
+            event_description: 'User logged in successfully',
+            ip_address: req.ip,
+            user_agent: req.get('User-Agent'),
+            success: true
+        });
+        
+        // Remove password from response
+        const { password: _, login_attempts, locked_until, ...userResponse } = user;
+        
+        res.json({
+            success: true,
+            message: 'Login successful',
+            user: userResponse,
+            token: token,
+            expiresAt: expiresAt.toISOString()
+        });
+        
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Login failed. Please try again.'
+        });
+    }
+});
+
+app.post('/api/auth/logout', authenticate, async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1] || req.cookies?.accessToken;
+        
+        if (token) {
+            await db.revokeSession(token);
+        }
+        
+        // Log logout event
+        await db.logAuditEvent({
+            user_id: req.user.id,
+            event_type: 'logout',
+            event_description: 'User logged out',
+            ip_address: req.ip,
+            user_agent: req.get('User-Agent'),
+            success: true
+        });
+        
+        res.json({
+            success: true,
+            message: 'Logout successful'
+        });
+        
+    } catch (error) {
+        console.error('Logout error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Logout failed'
+        });
+    }
+});
+
+// Court routes
+app.get('/api/courts', async (req, res) => {
+    try {
+        const courts = await db.getAllCourts(true);
+        
+        res.json({
+            success: true,
+            courts: courts
+        });
+        
+    } catch (error) {
+        console.error('Error fetching courts:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch courts'
+        });
+    }
+});
+
+app.get('/api/courts/:id', async (req, res) => {
+    try {
+        const court = await db.getCourtById(req.params.id);
+        
+        if (!court) {
+            return res.status(404).json({
+                success: false,
+                message: 'Court not found'
+            });
+        }
+        
+        res.json({
+            success: true,
+            court: court
+        });
+        
+    } catch (error) {
+        console.error('Error fetching court:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch court'
+        });
+    }
+});
+
+// Booking routes
+app.get('/api/bookings/my', authenticate, async (req, res) => {
+    try {
+        const { status } = req.query;
+        const bookings = await db.getUserBookings(req.user.id, status);
+        
+        res.json({
+            success: true,
+            bookings: bookings
+        });
+        
+    } catch (error) {
+        console.error('Error fetching user bookings:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch bookings'
+        });
+    }
+});
+
+app.post('/api/bookings', authenticate, async (req, res) => {
+    try {
+        const { court_id, date, start_time, end_time } = req.body;
+        
+        // Validate booking data
+        if (!court_id || !date || !start_time || !end_time) {
+            return res.status(400).json({
+                success: false,
+                message: 'Missing required booking information'
+            });
+        }
+        
+        // Check if court exists and is active
+        const court = await db.getCourtById(court_id);
+        if (!court || !court.is_active) {
+            return res.status(404).json({
+                success: false,
+                message: 'Court not available'
+            });
+        }
+        
+        // Check for booking conflicts
+        const existingBookings = await db.getBookingsByCourt(court_id, date);
+        const hasConflict = existingBookings.some(booking => {
+            return (start_time < booking.end_time && end_time > booking.start_time);
+        });
+        
+        if (hasConflict) {
+            return res.status(409).json({
+                success: false,
+                message: 'Court already booked for this time slot'
+            });
+        }
+        
+        // Calculate total price
+        const startTime = new Date(`2000-01-01T${start_time}`);
+        const endTime = new Date(`2000-01-01T${end_time}`);
+        const hours = (endTime - startTime) / (1000 * 60 * 60);
+        const total_price = Math.round(court.price_per_hour * hours);
+        
+        // Create booking
+        const bookingId = uuidv4();
+        const booking = await db.createBooking({
+            id: bookingId,
+            user_id: req.user.id,
+            court_id: court_id,
+            date: date,
+            start_time: start_time,
+            end_time: end_time,
+            total_price: total_price,
+            payment_id: null
+        });
+        
+        // Log booking creation
+        await db.logAuditEvent({
+            user_id: req.user.id,
+            event_type: 'booking_created',
+            event_description: 'New booking created',
+            ip_address: req.ip,
+            user_agent: req.get('User-Agent'),
+            resource_id: bookingId,
+            resource_type: 'booking',
+            new_values: { court_id, date, start_time, end_time, total_price }
+        });
+        
+        res.status(201).json({
+            success: true,
+            message: 'Booking created successfully',
+            booking: booking
+        });
+        
+    } catch (error) {
+        console.error('Error creating booking:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to create booking'
+        });
+    }
+});
+
+app.patch('/api/bookings/:id', authenticate, async (req, res) => {
+    try {
+        const bookingId = req.params.id;
+        const { status, cancellation_reason } = req.body;
+        
+        // Get existing booking
+        const booking = await db.getBookingById(bookingId);
+        if (!booking) {
+            return res.status(404).json({
+                success: false,
+                message: 'Booking not found'
+            });
+        }
+        
+        // Check authorization
+        if (booking.user_id !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to modify this booking'
+            });
+        }
+        
+        // Update booking status
+        const updatedBooking = await db.updateBookingStatus(bookingId, status, {
+            cancellation_reason: cancellation_reason
+        });
+        
+        // Log booking update
+        await db.logAuditEvent({
+            user_id: req.user.id,
+            event_type: 'booking_updated',
+            event_description: `Booking status changed to ${status}`,
+            ip_address: req.ip,
+            user_agent: req.get('User-Agent'),
+            resource_id: bookingId,
+            resource_type: 'booking',
+            old_values: { status: booking.status },
+            new_values: { status, cancellation_reason }
+        });
+        
+        res.json({
+            success: true,
+            message: 'Booking updated successfully',
+            booking: updatedBooking
+        });
+        
+    } catch (error) {
+        console.error('Error updating booking:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update booking'
+        });
+    }
+});
+
+// Admin routes
+app.get('/api/admin/users', authenticate, requireAdmin, async (req, res) => {
+    try {
+        const users = await db.all(`
+            SELECT id, name, email, phone, role, is_verified, created_at, last_login
+            FROM users 
+            ORDER BY created_at DESC
+        `);
+        
+        res.json({
+            success: true,
+            users: users
+        });
+        
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch users'
+        });
+    }
+});
+
+app.get('/api/admin/bookings', authenticate, requireAdmin, async (req, res) => {
+    try {
+        const bookings = await db.all(`
+            SELECT b.*, u.name as user_name, u.email as user_email,
+                   c.name as court_name, c.location as court_location
+            FROM bookings b
+            JOIN users u ON b.user_id = u.id
+            JOIN courts c ON b.court_id = c.id
+            ORDER BY b.created_at DESC
+        `);
+        
+        res.json({
+            success: true,
+            bookings: bookings
+        });
+        
+    } catch (error) {
+        console.error('Error fetching all bookings:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch bookings'
+        });
+    }
+});
+
+app.get('/api/admin/stats', authenticate, requireAdmin, async (req, res) => {
+    try {
+        const stats = await db.getDatabaseStats();
+        
+        // Additional statistics
+        const revenue = await db.get(`
+            SELECT SUM(total_price) as total_revenue
+            FROM bookings 
+            WHERE status = 'confirmed' AND payment_status = 'paid'
+        `);
+        
+        const recentActivity = await db.get(`
+            SELECT COUNT(*) as recent_bookings
+            FROM bookings 
+            WHERE created_at >= datetime('now', '-7 days')
+        `);
+        
+        res.json({
+            success: true,
+            stats: {
+                ...stats,
+                total_revenue: revenue.total_revenue || 0,
+                recent_bookings: recentActivity.recent_bookings || 0
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error fetching admin stats:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch statistics'
+        });
+    }
+});
+
+// Health check endpoint
+app.get('/api/health', async (req, res) => {
+    try {
+        const dbStats = await db.getDatabaseStats();
+        
+        res.json({
+            success: true,
+            status: 'healthy',
+            timestamp: new Date().toISOString(),
+            database: {
+                connected: db.isConnected,
+                stats: dbStats
+            }
+        });
+        
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            status: 'unhealthy',
+            error: error.message
+        });
+    }
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err);
+    
+    // Log error event
+    if (db && db.isConnected) {
+        db.logAuditEvent({
+            user_id: req.user?.id,
+            event_type: 'system_error',
+            event_description: err.message,
+            ip_address: req.ip,
+            user_agent: req.get('User-Agent'),
+            success: false,
+            error_message: err.stack
+        }).catch(logErr => {
+            console.error('Failed to log error event:', logErr);
+        });
+    }
+    
+    res.status(500).json({
+        success: false,
+        message: 'Internal server error'
     });
-  } catch (error) {
-    res.status(500).json({ error: 'Booking failed' });
-  }
 });
 
-app.patch('/api/bookings/:id', authenticate, (req, res) => {
-  const booking = data.bookings.find(b => b.id === req.params.id);
-  if (!booking) {
-    return res.status(404).json({ error: 'Booking not found' });
-  }
-
-  if (booking.userId !== req.user.id && req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Not authorized' });
-  }
-
-  const { status } = req.body;
-  booking.status = status;
-  booking.updatedAt = new Date().toISOString();
-
-  saveData();
-  res.json({ success: true, booking });
+// 404 handler
+app.use('*', (req, res) => {
+    res.status(404).json({
+        success: false,
+        message: 'Endpoint not found'
+    });
 });
 
-// Admin Routes
-app.get('/api/admin/bookings', authenticate, (req, res) => {
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Admin access required' });
-  }
+// Initialize and start server
+async function startServer() {
+    try {
+        // Initialize database
+        await db.initialize();
+        
+        // Start server
+        app.listen(PORT, () => {
+            console.log(`🏀 Basketball Booking Server running on port ${PORT}`);
+            console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+            console.log(`🔒 Security features enabled`);
+            console.log(`💾 Database: SQLite`);
+        });
+        
+    } catch (error) {
+        console.error('Failed to start server:', error);
+        process.exit(1);
+    }
+}
 
-  const bookingsWithDetails = data.bookings.map(booking => {
-    const court = data.courts.find(c => c.id === booking.courtId);
-    const user = data.users.find(u => u.id === booking.userId);
-    return {
-      ...booking,
-      court: court ? {
-        id: court.id,
-        name: court.name,
-        location: court.location
-      } : null,
-      user: user ? {
-        id: user.id,
-        name: user.name,
-        email: user.email
-      } : null
-    };
-  });
-
-  res.json({ bookings: bookingsWithDetails });
+// Graceful shutdown
+process.on('SIGINT', async () => {
+    console.log('\n🔄 Shutting down gracefully...');
+    
+    try {
+        await db.close();
+        console.log('✅ Database connection closed');
+        process.exit(0);
+    } catch (error) {
+        console.error('❌ Error during shutdown:', error);
+        process.exit(1);
+    }
 });
 
-app.get('/api/admin/stats', authenticate, (req, res) => {
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Admin access required' });
-  }
-
-  const stats = {
-    totalBookings: data.bookings.length,
-    confirmedBookings: data.bookings.filter(b => b.status === 'confirmed').length,
-    pendingBookings: data.bookings.filter(b => b.status === 'pending').length,
-    totalRevenue: data.bookings
-      .filter(b => b.status === 'confirmed')
-      .reduce((sum, b) => sum + b.totalPrice, 0),
-    totalUsers: data.users.filter(u => u.role === 'user').length,
-    totalCourts: data.courts.filter(c => c.isActive).length
-  };
-
-  res.json({ stats });
+process.on('SIGTERM', async () => {
+    console.log('\n🔄 Shutting down gracefully...');
+    
+    try {
+        await db.close();
+        console.log('✅ Database connection closed');
+        process.exit(0);
+    } catch (error) {
+        console.error('❌ Error during shutdown:', error);
+        process.exit(1);
+    }
 });
 
-// Admin user management endpoints
-app.get('/api/admin/users', authenticate, (req, res) => {
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Admin access required' });
-  }
+// Start the server
+startServer();
 
-  const { password: _, ...usersWithoutPassword } = data.users;
-  res.json({ users: usersWithoutPassword });
-});
-
-app.delete('/api/admin/users/:id', authenticate, (req, res) => {
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Admin access required' });
-  }
-
-  const userIndex = data.users.findIndex(u => u.id === req.params.id);
-  if (userIndex === -1) {
-    return res.status(404).json({ error: 'User not found' });
-  }
-
-  const user = data.users[userIndex];
-  
-  // Don't allow deleting admin users
-  if (user.role === 'admin') {
-    return res.status(400).json({ error: 'Cannot delete admin user' });
-  }
-
-  // Also delete user's bookings
-  data.bookings = data.bookings.filter(b => b.userId !== req.params.id);
-  
-  // Remove user
-  data.users.splice(userIndex, 1);
-  
-  saveData();
-  res.json({ success: true });
-});
-
-// Serve frontend
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/index.html'));
-});
-
-// Initialize data and start server
-loadData();
-app.listen(PORT, () => {
-  console.log(`🏀 Basketball Booking System running at http://localhost:${PORT}`);
-  console.log('📊 Admin: admin@basketball.com / admin123');
-  console.log('👤 User: rahul@example.com / user123');
-  console.log('👤 User: priya@example.com / user123');
-});
+module.exports = app;
