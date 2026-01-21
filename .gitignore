@@ -15,3 +15,14 @@ build/
 .cache/
 .temp/
 tmp/
+
+# Backend and Local Data Exclusions
+data/
+database/
+tests/
+scripts/
+*.db
+*.db-shm
+*.db-wal
+server.js
+package-lock.json
