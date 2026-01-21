@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signup | Dribble-Ground Academy</title>
+    <title>Sign Up | Dribble-Ground Academy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Oswald:wght@500;600;700&amp;display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Oswald:wght@500;600;700&display=swap"
         rel="stylesheet">
     <style>
         body {
@@ -35,48 +35,77 @@
 
     <div class="w-full max-w-md relative z-10">
         <!-- Logo -->
-        <div class="flex items-center gap-3 justify-center mb-10">
-            <div class="text-yellow-500">
-                <i data-lucide="basketball" class="w-10 h-10"></i>
-            </div>
+        <div class="flex items-center flex-col gap-4 justify-center mb-8">
+            <img src="https://i.postimg.cc/LXLkhhs6/b9e00f4504772a134f8444faab4d7b16.jpg" alt="Logo"
+                class="w-20 h-20 rounded-2xl shadow-2xl border-4 border-yellow-400/20">
             <span class="text-black font-display uppercase text-3xl tracking-tight font-semibold">Dribble-Ground</span>
         </div>
 
         <div class="bg-white p-8 md:p-10 rounded-3xl border border-gray-100 shadow-[0_20px_60px_rgba(0,0,0,0.05)]">
             <h2 class="font-display text-4xl font-bold uppercase tracking-tight mb-2 text-center text-black">Create
                 Account</h2>
-            <p class="text-gray-400 text-center text-sm mb-8 font-light">Join the next generation of champions</p>
+            <p class="text-gray-400 text-center text-sm mb-6 font-light">Join the next generation of champions</p>
 
-            <form onsubmit="event.preventDefault(); window.location.href='dashboard.html';" class="space-y-6">
+            <!-- Error Message -->
+            <div id="errorMessage"
+                class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm"></div>
+
+            <form id="signupForm" class="space-y-5">
                 <div>
                     <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Full
                         Name</label>
-                    <input type="text" required
-                        class="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-yellow-400 transition-all outline-none text-sm"
+                    <input type="text" id="name" required
+                        class="w-full px-6 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-yellow-400 focus:bg-white transition-all outline-none text-sm"
                         placeholder="John Doe">
+                    <p id="nameError" class="hidden text-red-500 text-xs mt-1 ml-1"></p>
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Email
                         Address</label>
-                    <input type="email" required
-                        class="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-yellow-400 transition-all outline-none text-sm"
+                    <input type="email" id="email" required
+                        class="w-full px-6 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-yellow-400 focus:bg-white transition-all outline-none text-sm"
                         placeholder="john@example.com">
+                    <p id="emailError" class="hidden text-red-500 text-xs mt-1 ml-1"></p>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Phone
+                        Number</label>
+                    <div class="flex">
+                        <span
+                            class="px-4 py-4 bg-gray-100 rounded-l-2xl text-gray-500 text-sm border-2 border-r-0 border-transparent">+91</span>
+                        <input type="tel" id="phone" maxlength="10"
+                            class="w-full px-4 py-4 rounded-r-2xl bg-gray-50 border-2 border-transparent focus:border-yellow-400 focus:bg-white transition-all outline-none text-sm"
+                            placeholder="9876543210 (Optional)">
+                    </div>
+                    <p id="phoneError" class="hidden text-red-500 text-xs mt-1 ml-1"></p>
                 </div>
                 <div>
                     <label
                         class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Password</label>
-                    <input type="password" required
-                        class="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-yellow-400 transition-all outline-none text-sm"
-                        placeholder="••••••••">
+                    <div class="relative">
+                        <input type="password" id="password" required minlength="6"
+                            class="w-full px-6 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-yellow-400 focus:bg-white transition-all outline-none text-sm pr-12"
+                            placeholder="Min 6 characters">
+                        <button type="button" onclick="togglePassword()"
+                            class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            <i data-lucide="eye" id="eyeIcon" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <!-- Password Strength -->
+                    <div class="mt-2 h-1 bg-gray-200 rounded-full overflow-hidden">
+                        <div id="strengthBar" class="h-full bg-gray-300 transition-all" style="width: 0%"></div>
+                    </div>
+                    <p id="passwordError" class="hidden text-red-500 text-xs mt-1 ml-1"></p>
                 </div>
 
-                <button type="submit"
-                    class="w-full bg-[#FCD34D] text-black py-5 rounded-2xl font-bold uppercase tracking-wide text-sm hover:bg-[#fbbf24] transition-all hover:shadow-[0_15px_40px_rgba(251,191,36,0.3)] hover:-translate-y-0.5 mt-4">
-                    Create Account
+                <button type="submit" id="submitBtn"
+                    class="w-full bg-[#FCD34D] text-black py-5 rounded-2xl font-bold uppercase tracking-wide text-sm hover:bg-[#fbbf24] transition-all hover:shadow-[0_15px_40px_rgba(251,191,36,0.3)] hover:-translate-y-0.5 mt-2 flex items-center justify-center gap-2">
+                    <span>Create Account</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
                 </button>
             </form>
 
-            <p class="text-center text-xs text-gray-400 mt-8">
+            <p class="text-center text-xs text-gray-400 mt-6">
                 Already have an account?
                 <a href="signin.html"
                     class="text-black font-bold uppercase hover:underline decoration-yellow-400 decoration-2 underline-offset-4">Sign
@@ -84,7 +113,7 @@
             </p>
         </div>
 
-        <div class="text-center mt-8">
+        <div class="text-center mt-6">
             <a href="index.html"
                 class="text-gray-400 text-xs font-medium uppercase tracking-widest hover:text-black transition-colors flex items-center justify-center gap-2">
                 <i data-lucide="arrow-left" class="w-4 h-4"></i>
@@ -93,8 +122,130 @@
         </div>
     </div>
 
+    <script src="js/app.js"></script>
     <script>
-        lucide.createIcons();
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+
+            // Password strength indicator
+            document.getElementById('password').addEventListener('input', updateStrength);
+        });
+
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const icon = document.getElementById('eyeIcon');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.dataset.lucide = 'eye-off';
+            } else {
+                input.type = 'password';
+                icon.dataset.lucide = 'eye';
+            }
+            lucide.createIcons();
+        }
+
+        function updateStrength() {
+            const password = document.getElementById('password').value;
+            const bar = document.getElementById('strengthBar');
+
+            let strength = 0;
+            if (password.length >= 6) strength += 25;
+            if (password.length >= 8) strength += 25;
+            if (/[A-Z]/.test(password)) strength += 25;
+            if (/[0-9]/.test(password)) strength += 25;
+
+            bar.style.width = strength + '%';
+
+            if (strength <= 25) {
+                bar.className = 'h-full bg-red-500 transition-all';
+            } else if (strength <= 50) {
+                bar.className = 'h-full bg-orange-500 transition-all';
+            } else if (strength <= 75) {
+                bar.className = 'h-full bg-yellow-500 transition-all';
+            } else {
+                bar.className = 'h-full bg-green-500 transition-all';
+            }
+        }
+
+        function showError(field, message) {
+            const errorEl = document.getElementById(field + 'Error');
+            if (errorEl) {
+                errorEl.textContent = message;
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        function clearErrors() {
+            document.querySelectorAll('[id$="Error"]').forEach(el => {
+                el.classList.add('hidden');
+            });
+        }
+
+        document.getElementById('signupForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            clearErrors();
+
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const password = document.getElementById('password').value;
+
+            // Validation
+            let hasError = false;
+
+            if (!name || name.length < 2) {
+                showError('name', 'Name must be at least 2 characters');
+                hasError = true;
+            }
+
+            if (!email) {
+                showError('email', 'Email is required');
+                hasError = true;
+            } else if (!Validation.email(email)) {
+                showError('email', 'Invalid email format');
+                hasError = true;
+            }
+
+            if (phone && !Validation.phone(phone)) {
+                showError('phone', 'Invalid phone (10 digits starting with 6-9)');
+                hasError = true;
+            }
+
+            if (!password) {
+                showError('password', 'Password is required');
+                hasError = true;
+            } else if (password.length < 6) {
+                showError('password', 'Password must be at least 6 characters');
+                hasError = true;
+            }
+
+            if (hasError) return;
+
+            // Attempt registration
+            const btn = document.getElementById('submitBtn');
+            btn.innerHTML = '<span>Creating account...</span><div class="animate-spin w-4 h-4 border-2 border-black border-t-transparent rounded-full"></div>';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                const result = userManager.register({ name, email, phone, password });
+
+                if (result.success) {
+                    Utils.showToast('Account created! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 500);
+                } else {
+                    const errorDiv = document.getElementById('errorMessage');
+                    errorDiv.textContent = result.error;
+                    errorDiv.classList.remove('hidden');
+
+                    btn.innerHTML = '<span>Create Account</span><i data-lucide="arrow-right" class="w-4 h-4"></i>';
+                    btn.disabled = false;
+                    lucide.createIcons();
+                }
+            }, 800);
+        });
     </script>
 </body>
 

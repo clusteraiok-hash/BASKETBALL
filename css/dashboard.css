@@ -1,0 +1,94 @@
+:root {
+    --sidebar-bg: #FFFFFF;
+    --sidebar-text: #4B5563;
+    --sidebar-active-bg: #F3F4F6;
+    --primary-accent: #FCD34D;
+    --primary-dark: #F59E0B;
+    --surface-bg: #F9FAFB;
+    --text-main: #111827;
+    --border-grey: #E5E7EB;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--surface-bg);
+    color: var(--text-main);
+}
+
+.font-display {
+    font-family: 'Oswald', sans-serif;
+}
+
+/* Sidebar Styling */
+.sidebar-link {
+    color: var(--sidebar-text);
+    transition: all 0.2s ease;
+}
+
+.sidebar-link.active {
+    background: var(--sidebar-active-bg);
+    border-right: 4px solid var(--primary-accent);
+    color: var(--text-main);
+    font-weight: 700;
+}
+
+.sidebar-link:hover:not(.active) {
+    background: #F8FAFC;
+    color: var(--text-main);
+}
+
+/* Booking Step Indicators */
+.step-active {
+    background: var(--primary-accent);
+    color: #000;
+    box-shadow: 0 4px 12px rgba(252, 211, 77, 0.4);
+}
+
+.step-completed {
+    background: #10B981;
+    color: #fff;
+}
+
+.step-pending {
+    background: #E2E8F0;
+    color: #475569;
+}
+
+/* Scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Transitions */
+.section-content {
+    animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Premium Cards */
+.glass-card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+}

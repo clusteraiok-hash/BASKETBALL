@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Oswald:wght@500;600;700&amp;display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Oswald:wght@500;600;700&display=swap"
         rel="stylesheet">
     <style>
         body {
@@ -20,6 +20,22 @@
         h3,
         .font-display {
             font-family: 'Oswald', sans-serif;
+        }
+
+        .toast {
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
     </style>
 </head>
@@ -35,10 +51,9 @@
 
     <div class="w-full max-w-md relative z-10">
         <!-- Logo -->
-        <div class="flex items-center gap-3 justify-center mb-10">
-            <div class="text-yellow-500">
-                <i data-lucide="basketball" class="w-10 h-10"></i>
-            </div>
+        <div class="flex items-center flex-col gap-4 justify-center mb-10">
+            <img src="https://i.postimg.cc/LXLkhhs6/b9e00f4504772a134f8444faab4d7b16.jpg" alt="Logo"
+                class="w-20 h-20 rounded-2xl shadow-2xl border-4 border-yellow-400/20">
             <span class="text-black font-display uppercase text-3xl tracking-tight font-semibold">Dribble-Ground</span>
         </div>
 
@@ -47,27 +62,53 @@
                 Back</h2>
             <p class="text-gray-400 text-center text-sm mb-8 font-light">Enter your details to access your dashboard</p>
 
-            <form onsubmit="event.preventDefault(); window.location.href='dashboard.html';" class="space-y-6">
+            <!-- Error Message -->
+            <div id="errorMessage"
+                class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm"></div>
+
+            <form id="loginForm" class="space-y-6">
                 <div>
                     <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Email
                         Address</label>
-                    <input type="email" required
-                        class="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-yellow-400 transition-all outline-none text-sm"
+                    <input type="email" id="email" required
+                        class="w-full px-6 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-yellow-400 focus:bg-white transition-all outline-none text-sm"
                         placeholder="john@example.com">
+                    <p id="emailError" class="hidden text-red-500 text-xs mt-1 ml-1"></p>
                 </div>
                 <div>
                     <label
                         class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Password</label>
-                    <input type="password" required
-                        class="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-yellow-400 transition-all outline-none text-sm"
-                        placeholder="••••••••">
+                    <div class="relative">
+                        <input type="password" id="password" required
+                            class="w-full px-6 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-yellow-400 focus:bg-white transition-all outline-none text-sm pr-12"
+                            placeholder="••••••••">
+                        <button type="button" onclick="togglePassword()"
+                            class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            <i data-lucide="eye" id="eyeIcon" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <p id="passwordError" class="hidden text-red-500 text-xs mt-1 ml-1"></p>
                 </div>
 
-                <button type="submit"
-                    class="w-full bg-[#FCD34D] text-black py-5 rounded-2xl font-bold uppercase tracking-wide text-sm hover:bg-[#fbbf24] transition-all hover:shadow-[0_15px_40px_rgba(251,191,36,0.3)] hover:-translate-y-0.5 mt-4">
-                    Sign In
+                <button type="submit" id="submitBtn"
+                    class="w-full bg-[#FCD34D] text-black py-5 rounded-2xl font-bold uppercase tracking-wide text-sm hover:bg-[#fbbf24] transition-all hover:shadow-[0_15px_40px_rgba(251,191,36,0.3)] hover:-translate-y-0.5 mt-4 flex items-center justify-center gap-2">
+                    <span>Sign In</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
                 </button>
             </form>
+
+            <!-- Demo Credentials -->
+            <div class="mt-6 p-4 bg-gray-50 rounded-xl">
+                <p class="text-xs text-gray-500 mb-2 font-medium">Demo Accounts:</p>
+                <div class="space-y-1 text-xs">
+                    <p class="text-gray-600"><span
+                            class="font-mono bg-white px-2 py-1 rounded">autionix2@gmail.com</span> /
+                        <span class="font-mono">12345678</span>
+                    </p>
+                    <p class="text-gray-600"><span class="font-mono bg-white px-2 py-1 rounded">rahul@example.com</span>
+                        / <span class="font-mono">player123</span></p>
+                </div>
+            </div>
 
             <p class="text-center text-xs text-gray-400 mt-8">
                 Don't have an account?
@@ -86,8 +127,94 @@
         </div>
     </div>
 
+    <script src="js/app.js"></script>
     <script>
-        lucide.createIcons();
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+
+            // Check if already logged in
+            if (userManager.isLoggedIn()) {
+                window.location.href = 'dashboard.html';
+            }
+        });
+
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const icon = document.getElementById('eyeIcon');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.dataset.lucide = 'eye-off';
+            } else {
+                input.type = 'password';
+                icon.dataset.lucide = 'eye';
+            }
+            lucide.createIcons();
+        }
+
+        function showError(field, message) {
+            const errorEl = document.getElementById(field + 'Error');
+            if (errorEl) {
+                errorEl.textContent = message;
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        function clearErrors() {
+            document.querySelectorAll('[id$="Error"]').forEach(el => {
+                el.classList.add('hidden');
+            });
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            clearErrors();
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            // Validation
+            let hasError = false;
+
+            if (!email) {
+                showError('email', 'Email is required');
+                hasError = true;
+            } else if (!Validation.email(email)) {
+                showError('email', 'Invalid email format');
+                hasError = true;
+            }
+
+            if (!password) {
+                showError('password', 'Password is required');
+                hasError = true;
+            }
+
+            if (hasError) return;
+
+            // Attempt login
+            const btn = document.getElementById('submitBtn');
+            btn.innerHTML = '<span>Signing in...</span><div class="animate-spin w-4 h-4 border-2 border-black border-t-transparent rounded-full"></div>';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                const result = userManager.login(email, password);
+
+                if (result.success) {
+                    Utils.showToast('Login successful! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 500);
+                } else {
+                    const errorDiv = document.getElementById('errorMessage');
+                    errorDiv.textContent = result.error;
+                    errorDiv.classList.remove('hidden');
+
+                    btn.innerHTML = '<span>Sign In</span><i data-lucide="arrow-right" class="w-4 h-4"></i>';
+                    btn.disabled = false;
+                    lucide.createIcons();
+                }
+            }, 800);
+        });
     </script>
 </body>
 

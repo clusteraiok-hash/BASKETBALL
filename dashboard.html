@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -7,903 +8,531 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Oswald:wght@500;600;700&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="css/dashboard.css">
     <script>
         tailwind.config = {
             theme: {
-                fontFamily: {
-                    sans: ['Inter', 'sans-serif'],
-                    display: ['Oswald', 'sans-serif'],
-                },
                 extend: {
+                    fontFamily: { display: ['Oswald', 'sans-serif'], body: ['Inter', 'sans-serif'] },
                     colors: {
-                        sidebar: '#000000', // Solid Black
-                        primary: '#FCD34D', // Academy Yellow
-                        'primary-dark': '#facc15',
-                        surface: '#ffffff', // Pure White
-                        card: '#ffffff',
-                        dark: '#000000',
-                        'chart-yellow': '#FCD34D',
-                        'chart-dark': '#111827',
-                        'chart-orange': '#fb923c',
-                    },
-                    fontSize: {
-                        xxs: '0.65rem',
+                        primary: '#FCD34D',
+                        'primary-dark': '#F59E0B',
+                        sidebar: '#FFFFFF',
+                        surface: '#F9FAFB',
+                        dark: {
+                            800: '#1E293B',
+                            900: '#0F172A'
+                        }
                     },
                     boxShadow: {
-                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'soft': '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+                        'xl': '0 10px 15px -3px rgba(0, 0, 0, 0.08)',
+                        'yellow': '0 4px 14px 0 rgba(252, 211, 77, 0.39)'
                     }
                 }
             }
         }
     </script>
-    <style>
-        /* Custom scrollbar for better aesthetics */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #333;
-            border-radius: 3px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #000;
-        }
-
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-
-        h1,
-        h2,
-        h3,
-        .font-display {
-            font-family: 'Oswald', sans-serif;
-        }
-    </style>
 </head>
 
-<body class="bg-surface text-neutral-800 antialiased overflow-hidden font-sans h-screen flex relative">
-    <!-- Background Decoration (Court Lines) -->
-    <div class="fixed inset-0 pointer-events-none opacity-[0.03] z-0">
-        <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
-            <circle cx="50" cy="50" r="30" stroke="black" stroke-width="0.05" fill="none"></circle>
-            <circle cx="50" cy="50" r="0.5" fill="black"></circle>
-            <line x1="50" y1="0" x2="50" y2="100" stroke="black" stroke-width="0.05"></line>
-            <path d="M0 50 L 100 50" stroke="black" stroke-width="0.05"></path>
-            <!-- 3pt lines -->
-            <path d="M0 20 Q 40 50 0 80" stroke="black" stroke-width="0.05" fill="none"></path>
-            <path d="M100 20 Q 60 50 100 80" stroke="black" stroke-width="0.05" fill="none"></path>
-        </svg>
+<body class="bg-surface min-h-screen font-body text-slate-900 overflow-x-hidden">
+
+    <!-- Mobile Header -->
+    <div class="lg:hidden bg-sidebar p-4 flex items-center justify-between text-slate-900 sticky top-0 z-50">
+        <div class="flex items-center gap-3">
+            <img src="https://i.postimg.cc/LXLkhhs6/b9e00f4504772a134f8444faab4d7b16.jpg" alt="Logo"
+                class="w-8 h-8 rounded-lg shadow-md border border-primary/20">
+            <span class="font-display font-bold uppercase tracking-tight text-xl">Dribble-Ground</span>
+        </div>
+        <button onclick="document.getElementById('sidebar').classList.toggle('-translate-x-full')"
+            class="p-2 bg-white/10 rounded-xl">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
     </div>
 
-    <!-- Sidebar -->
-    <aside
-        class="w-72 bg-sidebar text-white flex-shrink-0 flex flex-col h-full overflow-y-auto hidden md:flex transition-all duration-300">
-        <!-- Logo -->
-        <div class="p-8 pb-4">
-            <div class="flex items-center gap-3">
-                <div class="text-yellow-500">
-                    <i data-lucide="basketball" class="w-8 h-8"></i>
-                </div>
-                <span class="text-xl font-display uppercase tracking-tight font-semibold">Dribble-Ground</span>
-            </div>
-        </div>
-
-        <!-- Menu -->
-        <div class="flex-1 px-4 py-6 space-y-8">
-            <div class="">
-                <p class="px-4 text-xs font-semibold text-white/40 tracking-wider mb-4 uppercase">Menu</p>
-                <nav class="space-y-1">
-                    <a href="#"
-                        class="flex items-center gap-3 px-4 py-3 bg-white/5 rounded-2xl border-l-4 border-primary text-white transition-all group">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            data-lucide="layout-grid" class="lucide lucide-layout-grid w-5 h-5 text-primary">
-                            <rect width="7" height="7" x="3" y="3" rx="1"></rect>
-                            <rect width="7" height="7" x="14" y="3" rx="1"></rect>
-                            <rect width="7" height="7" x="14" y="14" rx="1"></rect>
-                            <rect width="7" height="7" x="3" y="14" rx="1"></rect>
-                        </svg>
-                        <span class="font-medium">Overview</span>
-                    </a>
-                    <a href="#"
-                        class="flex items-center gap-3 px-4 py-3 text-white/60 hover:text-white hover:bg-white/5 rounded-2xl transition-all group">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            data-lucide="bar-chart-2"
-                            class="lucide lucide-bar-chart-2 w-5 h-5 group-hover:text-primary transition-colors">
-                            <path d="M5 21v-6"></path>
-                            <path d="M12 21V3"></path>
-                            <path d="M19 21V9"></path>
-                        </svg>
-                        <span class="font-medium">Statistics</span>
-                    </a>
-                    <a href="#"
-                        class="flex items-center gap-3 px-4 py-3 text-white/60 hover:text-white hover:bg-white/5 rounded-2xl transition-all group">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            data-lucide="users"
-                            class="lucide lucide-users w-5 h-5 group-hover:text-primary transition-colors">
-                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                            <path d="M16 3.128a4 4 0 0 1 0 7.744"></path>
-                            <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-                            <circle cx="9" cy="7" r="4"></circle>
-                        </svg>
-                        <span class="font-medium">Customers</span>
-                    </a>
-                    <a href="#"
-                        class="flex items-center justify-between px-4 py-3 text-white/60 hover:text-white hover:bg-white/5 rounded-2xl transition-all group">
-                        <div class="flex items-center gap-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" data-lucide="package"
-                                class="lucide lucide-package w-5 h-5 group-hover:text-primary transition-colors">
-                                <path
-                                    d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z">
-                                </path>
-                                <path d="M12 22V12"></path>
-                                <polyline points="3.29 7 12 12 20.71 7"></polyline>
-                                <path d="m7.5 4.27 9 5.15"></path>
-                            </svg>
-                            <span class="font-medium">Product</span>
-                        </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            data-lucide="chevron-down" class="lucide lucide-chevron-down w-4 h-4">
-                            <path d="m6 9 6 6 6-6"></path>
-                        </svg>
-                    </a>
-                    <a href="#"
-                        class="flex items-center justify-between px-4 py-3 text-white/60 hover:text-white hover:bg-white/5 rounded-2xl transition-all group">
-                        <div class="flex items-center gap-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" data-lucide="mail"
-                                class="lucide lucide-mail w-5 h-5 group-hover:text-primary transition-colors">
-                                <path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"></path>
-                                <rect x="2" y="4" width="20" height="16" rx="2"></rect>
-                            </svg>
-                            <span class="font-medium">Messages</span>
-                        </div>
-                        <span class="bg-primary text-sidebar text-xs font-bold px-2 py-0.5 rounded-full">13</span>
-                    </a>
-                    <a href="#"
-                        class="flex items-center gap-3 px-4 py-3 text-white/60 hover:text-white hover:bg-white/5 rounded-2xl transition-all group">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            data-lucide="wallet"
-                            class="lucide lucide-wallet w-5 h-5 group-hover:text-primary transition-colors">
-                            <path
-                                d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1">
-                            </path>
-                            <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path>
-                        </svg>
-                        <span class="font-medium">Transactions</span>
-                    </a>
-                </nav>
-            </div>
-
-            <div class="">
-                <p class="px-4 text-xs font-semibold text-white/40 tracking-wider mb-4 uppercase">General</p>
-                <nav class="space-y-1">
-                    <a href="#"
-                        class="flex items-center gap-3 px-4 py-3 text-white/60 hover:text-white hover:bg-white/5 rounded-2xl transition-all group">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            data-lucide="settings"
-                            class="lucide lucide-settings w-5 h-5 group-hover:text-primary transition-colors">
-                            <path
-                                d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915">
-                            </path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                        <span class="font-medium">Settings</span>
-                    </a>
-                    <a href="#"
-                        class="flex items-center gap-3 px-4 py-3 text-white/60 hover:text-white hover:bg-white/5 rounded-2xl transition-all group">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            data-lucide="shield-check"
-                            class="lucide lucide-shield-check w-5 h-5 group-hover:text-primary transition-colors">
-                            <path
-                                d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z">
-                            </path>
-                            <path d="m9 12 2 2 4-4"></path>
-                        </svg>
-                        <span class="font-medium">Security</span>
-                    </a>
-                </nav>
-            </div>
-        </div>
-
-        <!-- User Profile -->
-        <div class="p-6 mt-auto">
-            <div class="flex items-center gap-3 px-2 py-2">
-                <img src="https://images.unsplash.com/photo-1544919396-1ca33089da44?auto=format&fit=crop&w=100&q=80"
-                    alt="User" class="w-10 h-10 rounded-full border-2 border-primary/50">
-                <div class="overflow-hidden">
-                    <p class="text-sm font-semibold text-white truncate">Fandaww Punx</p>
-                    <p class="text-xs text-white/40 truncate">fandaww6@gmail.com</p>
+    <div class="flex">
+        <!-- Sidebar -->
+        <aside id="sidebar"
+            class="fixed lg:static inset-y-0 left-0 w-80 bg-sidebar text-slate-600 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-40 flex flex-col h-screen border-r border-slate-200">
+            <!-- Brand -->
+            <div class="p-8 hidden lg:block border-b border-slate-50">
+                <div class="flex items-center gap-4 group cursor-pointer">
+                    <div
+                        class="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center rotate-3 group-hover:rotate-0 transition-all duration-300 shadow-lg shadow-primary/30 overflow-hidden">
+                        <img src="https://i.postimg.cc/LXLkhhs6/b9e00f4504772a134f8444faab4d7b16.jpg" alt="Logo"
+                            class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <h1
+                            class="font-display font-bold uppercase tracking-tighter text-2xl leading-none text-slate-900">
+                            Dribble Ground</h1>
+                        <p class="text-[10px] text-primary-dark font-black uppercase tracking-widest mt-1 opacity-80">
+                            Gold
+                            Standard Academy</p>
+                    </div>
                 </div>
             </div>
-        </div>
-    </aside>
 
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col h-full overflow-hidden bg-surface relative">
-        <!-- Top Header -->
-        <header class="h-20 bg-surface px-8 flex items-center justify-between shrink-0 z-20">
-            <div class="flex items-center gap-3">
-                <h1 class="text-xl font-display uppercase tracking-tight font-bold text-neutral-900">Academy Dashboard
-                </h1>
-                <i data-lucide="chevron-down" class="w-5 h-5 text-neutral-400"></i>
-            </div>
+            <!-- Navigation -->
+            <nav class="flex-1 px-4 py-4 space-y-2 overflow-y-auto no-scrollbar">
+                <p class="px-8 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-4 opacity-70">Core
+                    Directory</p>
 
-            <div class="flex items-center gap-6">
-                <!-- Search -->
-                <div class="relative hidden lg:block w-96">
-                    <i data-lucide="search"
-                        class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400"></i>
-                    <input type="text" placeholder="Search academy records..."
-                        class="w-full bg-white border border-neutral-200 rounded-full pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-neutral-300 placeholder:text-neutral-400">
+                <a href="#" onclick="showSection('overview')"
+                    class="sidebar-link active flex items-center gap-4 px-6 py-4 rounded-2xl transition-all group text-slate-900 bg-slate-50">
+                    <i data-lucide="layout-grid"
+                        class="w-5 h-5 opacity-60 group-hover:opacity-100 group-hover:text-primary-dark transition-all"></i>
+                    <span class="font-bold tracking-tight">Overview Dashboard</span>
+                </a>
+
+                <a href="#" onclick="showSection('my-bookings')"
+                    class="sidebar-link flex items-center gap-4 px-6 py-4 rounded-2xl transition-all group text-slate-500">
+                    <i data-lucide="calendar"
+                        class="w-5 h-5 opacity-60 group-hover:opacity-100 group-hover:text-primary-dark transition-all"></i>
+                    <span class="font-bold tracking-tight">Attendance Schedule</span>
+                </a>
+
+                <a href="#" onclick="showSection('documents')"
+                    class="sidebar-link flex items-center gap-4 px-6 py-4 rounded-2xl transition-all group text-slate-500">
+                    <i data-lucide="folder-open"
+                        class="w-5 h-5 opacity-60 group-hover:opacity-100 group-hover:text-primary-dark transition-all"></i>
+                    <span class="font-bold tracking-tight">Policy Vault</span>
+                </a>
+
+
+                <!-- Admin Only Section -->
+                <div id="admin-bookings-menu-item" class="hidden pt-6 border-t border-slate-100 mt-4">
+                    <p class="px-8 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-4 opacity-70">
+                        Management
+                        Control</p>
+                    <a href="#" onclick="showSection('bookings')"
+                        class="sidebar-link flex items-center gap-4 px-6 py-4 rounded-2xl transition-all group text-slate-500">
+                        <i data-lucide="users"
+                            class="w-5 h-5 opacity-60 group-hover:opacity-100 group-hover:text-primary-dark transition-all"></i>
+                        <span class="font-bold tracking-tight">Academy Bookings</span>
+                    </a>
+                    <a href="#" onclick="showSection('admin')"
+                        class="sidebar-link flex items-center gap-4 px-6 py-4 rounded-2xl transition-all group mt-2 text-slate-500">
+                        <i data-lucide="lock"
+                            class="w-5 h-5 opacity-60 group-hover:opacity-100 group-hover:text-primary-dark transition-all"></i>
+                        <span class="font-bold tracking-tight">Staff Console</span>
+                    </a>
                 </div>
+            </nav>
 
-                <!-- Actions -->
-                <div class="flex items-center gap-3">
-                    <button
-                        class="w-10 h-10 bg-white rounded-full border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            data-lucide="bell" class="lucide lucide-bell w-4 h-4 text-neutral-600">
-                            <path d="M10.268 21a2 2 0 0 0 3.464 0"></path>
-                            <path
-                                d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326">
-                            </path>
-                        </svg>
-                    </button>
-                    <button
-                        class="w-10 h-10 bg-white rounded-full border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            data-lucide="settings-2" class="lucide lucide-settings-2 w-4 h-4 text-neutral-600">
-                            <path d="M14 17H5"></path>
-                            <path d="M19 7h-9"></path>
-                            <circle cx="17" cy="17" r="3"></circle>
-                            <circle cx="7" cy="7" r="3"></circle>
-                        </svg>
-                    </button>
-                    <button
-                        class="flex items-center gap-2 bg-white border border-neutral-200 rounded-full px-4 py-2.5 hover:bg-neutral-50 transition-colors">
-                        <span class="text-sm font-medium">Add new product</span>
-                        <div class="bg-black text-white rounded-full p-0.5">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" data-lucide="plus" class="lucide lucide-plus w-3 h-3">
-                                <path d="M5 12h14"></path>
-                                <path d="M12 5v14"></path>
-                            </svg>
+            <!-- User Widget -->
+            <div class="p-4 mt-auto">
+                <div class="bg-slate-50 rounded-3xl p-5 border border-slate-100 group">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center font-black text-black text-lg shadow-sm flex-shrink-0">
+                            <span class="current-user-initial" onclick="location.reload()">?</span>
                         </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="font-bold text-slate-900 text-sm leading-tight truncate current-user-name">
+                                Loading...</p>
+                            <p
+                                class="text-[9px] text-slate-400 font-black uppercase tracking-widest truncate current-user-email">
+                                auth@dribble.com</p>
+                        </div>
+                    </div>
+                    <button onclick="handleLogout()"
+                        class="w-full flex items-center justify-center gap-2 bg-white text-red-500 border border-red-100 rounded-xl py-2.5 text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                        <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                        Sign Out
                     </button>
                 </div>
             </div>
-        </header>
+        </aside>
 
-        <!-- Dashboard Content -->
-        <div class="flex-1 overflow-y-auto p-4 md:p-8 pt-0">
-            <div class="flex flex-col xl:flex-row gap-6">
-                <!-- Left Main Section -->
-                <div class="flex-1 min-w-0 flex flex-col gap-6">
+        <!-- Main Content -->
+        <main class="flex-1 min-h-screen h-screen overflow-y-auto no-scrollbar relative p-4 lg:p-8">
 
-                    <!-- Title Row -->
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-2">
+            <div class="max-w-7xl mx-auto pb-12">
+                <!-- Overview Section -->
+                <div id="overview-section" class="section-content">
+                    <div class="flex justify-between items-center mb-10">
                         <div>
                             <h2
-                                class="text-2xl font-display font-bold uppercase tracking-tight text-neutral-900 leading-tight">
-                                Elite Performance Dashboard</h2>
-                            <p class="text-sm text-neutral-400 mt-1 font-light italic">Every session builds the champion
-                                within.</p>
-                        </div>
-                        <button
-                            class="bg-white border border-neutral-200 px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-medium text-neutral-600 hover:bg-neutral-50">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" data-lucide="calendar" class="lucide lucide-calendar w-4 h-4">
-                                <path d="M8 2v4"></path>
-                                <path d="M16 2v4"></path>
-                                <rect width="18" height="18" x="3" y="4" rx="2"></rect>
-                                <path d="M3 10h18"></path>
-                            </svg>
-                            January 2024 - May 2024
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" data-lucide="chevron-down"
-                                class="lucide lucide-chevron-down w-4 h-4 ml-2">
-                                <path d="m6 9 6 6 6-6"></path>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <!-- Top Stats Cards -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <!-- Update Card (Dark) -->
-                        <div
-                            class="bg-sidebar rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between h-56 group cursor-pointer">
-                            <!-- Background decoration -->
-                            <div
-                                class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2">
-                            </div>
-
-                            <div class="relative z-10 flex justify-between items-start">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-                                    <span class="text-white/80 text-xs font-medium tracking-wide">Update</span>
-                                </div>
-                            </div>
-
-                            <div class="relative z-10">
-                                <p class="text-white/60 text-xs mb-1">Feb 12th 2024</p>
-                                <h3 class="text-white text-xl font-semibold leading-snug mb-1">Sales revenue
-                                    increased<span class="text-primary">40%</span> in 1 week</h3>
-                            </div>
-
-                            <div
-                                class="relative z-10 flex items-center gap-1 text-white/70 hover:text-white transition-colors text-xs font-medium mt-auto">
-                                See Statistics <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" stroke-linejoin="round" data-lucide="chevron-right"
-                                    class="lucide lucide-chevron-right w-3 h-3">
-                                    <path d="m9 18 6-6-6-6"></path>
-                                </svg>
-                            </div>
-                        </div>
-
-                        <!-- Net Income Card -->
-                        <div
-                            class="bg-white rounded-3xl p-6 border border-neutral-100 shadow-soft h-56 flex flex-col justify-between">
-                            <div class="flex justify-between items-start">
-                                <span class="font-medium text-neutral-500 text-sm">Net Income</span>
-                                <button class="text-neutral-400 hover:text-neutral-600"><svg
-                                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" data-lucide="more-horizontal"
-                                        class="lucide lucide-more-horizontal w-5 h-5">
-                                        <circle cx="12" cy="12" r="1"></circle>
-                                        <circle cx="19" cy="12" r="1"></circle>
-                                        <circle cx="5" cy="12" r="1"></circle>
-                                    </svg></button>
-                            </div>
-                            <div>
-                                <div class="flex items-baseline gap-1">
-                                    <span class="text-3xl font-semibold text-neutral-900">$</span>
-                                    <span class="text-5xl font-bold text-neutral-900 tracking-tight">193.000</span>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" data-lucide="trending-up"
-                                    class="lucide lucide-trending-up w-4 h-4 text-primary">
-                                    <path d="M16 7h6v6"></path>
-                                    <path d="m22 7-8.5 8.5-5-5L2 17"></path>
-                                </svg>
-                                <span class="text-primary font-medium text-sm">+35% from last month</span>
-                            </div>
-                        </div>
-
-                        <!-- Total Return Card -->
-                        <div
-                            class="bg-white rounded-3xl p-6 border border-neutral-100 shadow-soft h-56 flex flex-col justify-between">
-                            <div class="flex justify-between items-start">
-                                <span class="font-medium text-neutral-500 text-sm">Total Return</span>
-                                <button class="text-neutral-400 hover:text-neutral-600"><svg
-                                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" data-lucide="more-horizontal"
-                                        class="lucide lucide-more-horizontal w-5 h-5">
-                                        <circle cx="12" cy="12" r="1"></circle>
-                                        <circle cx="19" cy="12" r="1"></circle>
-                                        <circle cx="5" cy="12" r="1"></circle>
-                                    </svg></button>
-                            </div>
-                            <div>
-                                <div class="flex items-baseline gap-1">
-                                    <span class="text-3xl font-semibold text-neutral-900">$</span>
-                                    <span class="text-5xl font-bold text-neutral-900 tracking-tight">32.000</span>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" data-lucide="trending-down"
-                                    class="lucide lucide-trending-down w-4 h-4 text-red-500">
-                                    <path d="M16 17h6v-6"></path>
-                                    <path d="m22 17-8.5-8.5-5 5L2 7"></path>
-                                </svg>
-                                <span class="text-red-500 font-medium text-sm">-24% from last month</span>
-                            </div>
+                                class="text-4xl font-display font-black uppercase tracking-tighter text-slate-900 underline decoration-primary decoration-8 decoration-skip-ink-none">
+                                Academy Central</h2>
+                            <p class="text-slate-400 font-bold mt-2">Welcome back, <span
+                                    class="current-user-name text-slate-700">Champion</span></p>
                         </div>
                     </div>
 
-                    <!-- Bottom Grid -->
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
-                        <!-- Transactions List -->
-                        <div
-                            class="lg:col-span-4 bg-white rounded-3xl p-6 border border-neutral-100 shadow-soft flex flex-col">
-                            <div class="flex items-center justify-between mb-6">
-                                <h3 class="font-semibold text-lg text-neutral-900">Transaction</h3>
-                                <button class="text-neutral-400 hover:text-neutral-600"><svg
-                                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" data-lucide="more-horizontal"
-                                        class="lucide lucide-more-horizontal w-5 h-5">
-                                        <circle cx="12" cy="12" r="1"></circle>
-                                        <circle cx="19" cy="12" r="1"></circle>
-                                        <circle cx="5" cy="12" r="1"></circle>
-                                    </svg></button>
-                            </div>
+                    <div id="stats-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                        <!-- Dynamic Stats Rendered Here -->
+                    </div>
 
-                            <div class="space-y-6 overflow-y-auto no-scrollbar pr-2 flex-1">
-                                <!-- Item 1 -->
-                                <div class="flex items-center justify-between group cursor-pointer">
-                                    <div class="flex items-center gap-4">
-                                        <div
-                                            class="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-600 group-hover:bg-primary group-hover:text-sidebar transition-colors">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                                stroke-linecap="round" stroke-linejoin="round" data-lucide="shirt"
-                                                class="lucide lucide-shirt w-5 h-5">
-                                                <path
-                                                    d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z">
-                                                </path>
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <p class="text-sm font-semibold text-neutral-900">Premium T-Shirt</p>
-                                            <p class="text-xs text-neutral-500">Jul 12th 2024</p>
+                    <div class="grid lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-2 space-y-8">
+                            <div class="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-soft">
+                                <h3 class="font-display text-2xl font-bold uppercase tracking-tight mb-6">Recent
+                                    Activity Highlights</h3>
+                                <div class="space-y-4">
+                                    <div
+                                        class="flex items-center gap-4 p-4 hover:bg-slate-50 rounded-2xl transition-colors border-2 border-transparent hover:border-slate-100">
+                                        <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center"><i
+                                                data-lucide="info" class="w-6 h-6 text-blue-500"></i></div>
+                                        <div class="flex-1">
+                                            <p class="font-bold text-slate-900">Summer Training Open</p>
+                                            <p class="text-xs text-slate-400 font-medium whitespace-nowrap">
+                                                Registration for summer camp is now active for all students.</p>
                                         </div>
                                     </div>
-                                    <div class="text-right">
-                                        <p
-                                            class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-md mb-1">
-                                            Completed</p>
-                                        <p class="text-[10px] text-neutral-400 font-mono">0JWEJS7ISNC</p>
-                                    </div>
-                                </div>
-
-                                <!-- Item 2 -->
-                                <div class="flex items-center justify-between group cursor-pointer">
-                                    <div class="flex items-center gap-4">
-                                        <div
-                                            class="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-600 group-hover:bg-primary group-hover:text-sidebar transition-colors">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                                stroke-linecap="round" stroke-linejoin="round" data-lucide="gamepad-2"
-                                                class="lucide lucide-gamepad-2 w-5 h-5">
-                                                <line x1="6" x2="10" y1="11" y2="11"></line>
-                                                <line x1="8" x2="8" y1="9" y2="13"></line>
-                                                <line x1="15" x2="15.01" y1="12" y2="12"></line>
-                                                <line x1="18" x2="18.01" y1="10" y2="10"></line>
-                                                <path
-                                                    d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z">
-                                                </path>
-                                            </svg>
+                                    <div
+                                        class="flex items-center gap-4 p-4 hover:bg-slate-50 rounded-2xl transition-colors border-2 border-transparent hover:border-slate-100">
+                                        <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
+                                            <i data-lucide="check-circle" class="w-6 h-6 text-green-500"></i>
                                         </div>
-                                        <div class="">
-                                            <p class="text-sm font-semibold text-neutral-900">Playstation 5</p>
-                                            <p class="text-xs text-neutral-500">Jul 12th 2024</p>
+                                        <div class="flex-1">
+                                            <p class="font-bold text-slate-900">Health Policies Updated</p>
+                                            <p class="text-xs text-slate-400 font-medium">Please review the new safety
+                                                guidelines in the Policy Vault.</p>
                                         </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <p
-                                            class="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded-md mb-1">
-                                            Pending</p>
-                                        <p class="text-[10px] text-neutral-400 font-mono">0JWEJS7ISNC</p>
-                                    </div>
-                                </div>
-
-                                <!-- Item 3 -->
-                                <div class="flex items-center justify-between group cursor-pointer">
-                                    <div class="flex items-center gap-4">
-                                        <div
-                                            class="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-600 group-hover:bg-primary group-hover:text-sidebar transition-colors">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                                stroke-linecap="round" stroke-linejoin="round" data-lucide="user"
-                                                class="lucide lucide-user w-5 h-5">
-                                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-                                                <circle cx="12" cy="7" r="4"></circle>
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <p class="text-sm font-semibold text-neutral-900">Hoodie Gombrong</p>
-                                            <p class="text-xs text-neutral-500">Jul 12th 2024</p>
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <p
-                                            class="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded-md mb-1">
-                                            Pending</p>
-                                        <p class="text-[10px] text-neutral-400 font-mono">0JWEJS7ISNC</p>
-                                    </div>
-                                </div>
-
-                                <!-- Item 4 -->
-                                <div class="flex items-center justify-between group cursor-pointer">
-                                    <div class="flex items-center gap-4">
-                                        <div
-                                            class="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-600 group-hover:bg-primary group-hover:text-sidebar transition-colors">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                                stroke-linecap="round" stroke-linejoin="round" data-lucide="smartphone"
-                                                class="lucide lucide-smartphone w-5 h-5">
-                                                <rect width="14" height="20" x="5" y="2" rx="2" ry="2"></rect>
-                                                <path d="M12 18h.01"></path>
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <p class="text-sm font-semibold text-neutral-900">iPhone 15 Pro Max</p>
-                                            <p class="text-xs text-neutral-500">Jul 12th 2024</p>
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <p
-                                            class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-md mb-1">
-                                            Completed</p>
-                                        <p class="text-[10px] text-neutral-400 font-mono">0JWEJS7ISNC</p>
-                                    </div>
-                                </div>
-
-                                <!-- Item 5 -->
-                                <div class="flex items-center justify-between group cursor-pointer">
-                                    <div class="flex items-center gap-4">
-                                        <div
-                                            class="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-600 group-hover:bg-primary group-hover:text-sidebar transition-colors">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                                stroke-linecap="round" stroke-linejoin="round" data-lucide="coffee"
-                                                class="lucide lucide-coffee w-5 h-5">
-                                                <path d="M10 2v2"></path>
-                                                <path d="M14 2v2"></path>
-                                                <path
-                                                    d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1">
-                                                </path>
-                                                <path d="M6 2v2"></path>
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <p class="text-sm font-semibold text-neutral-900">Lotse</p>
-                                            <p class="text-xs text-neutral-500">Jul 12th 2024</p>
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <p
-                                            class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-md mb-1">
-                                            Completed</p>
-                                        <p class="text-[10px] text-neutral-400 font-mono">0JWEJS7ISNC</p>
-                                    </div>
-                                </div>
-
-                                <!-- Item 6 -->
-                                <div class="flex items-center justify-between group cursor-pointer">
-                                    <div class="flex items-center gap-4">
-                                        <div
-                                            class="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-600 group-hover:bg-primary group-hover:text-sidebar transition-colors">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                                stroke-linecap="round" stroke-linejoin="round" data-lucide="cup-soda"
-                                                class="lucide lucide-cup-soda w-5 h-5">
-                                                <path d="m6 8 1.75 12.28a2 2 0 0 0 2 1.72h4.54a2 2 0 0 0 2-1.72L18 8">
-                                                </path>
-                                                <path d="M5 8h14"></path>
-                                                <path d="M7 15a6.47 6.47 0 0 1 5 0 6.47 6.47 0 0 0 5 0"></path>
-                                                <path d="m12 8 1-6h2"></path>
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <p class="text-sm font-semibold text-neutral-900">Starbucks</p>
-                                            <p class="text-xs text-neutral-500">Jul 12th 2024</p>
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <p
-                                            class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-md mb-1">
-                                            Completed</p>
-                                        <p class="text-[10px] text-neutral-400 font-mono">0JWEJS7ISNC</p>
-                                    </div>
-                                </div>
-
-                                <!-- Item 7 -->
-                                <div class="flex items-center justify-between group cursor-pointer">
-                                    <div class="flex items-center gap-4">
-                                        <div
-                                            class="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-600 group-hover:bg-primary group-hover:text-sidebar transition-colors">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                                stroke-linecap="round" stroke-linejoin="round" data-lucide="shirt"
-                                                class="lucide lucide-shirt w-5 h-5">
-                                                <path
-                                                    d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z">
-                                                </path>
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <p class="text-sm font-semibold text-neutral-900">Tinek Detstar T-Shirt</p>
-                                            <p class="text-xs text-neutral-500">Jul 12th 2024</p>
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <p
-                                            class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-md mb-1">
-                                            Completed</p>
-                                        <p class="text-[10px] text-neutral-400 font-mono">0JWEJS7ISNC</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        <div class="space-y-8">
+                            <div class="bg-sidebar rounded-[2rem] p-8 text-white relative overflow-hidden group">
+                                <div
+                                    class="absolute -bottom-10 -right-10 w-40 h-40 bg-primary rounded-full blur-[80px] opacity-20 group-hover:opacity-40 transition-opacity">
+                                </div>
+                                <h3 class="font-display text-2xl font-bold uppercase tracking-tight mb-2">Need Help?
+                                </h3>
+                                <p class="text-white/40 text-sm mb-8 leading-relaxed">Our academy support team is
+                                    available 24/7 for technical and administrative assistance.</p>
+                                <a href="tel:+918084970887"
+                                    class="flex items-center gap-3 bg-white/10 hover:bg-primary hover:text-black p-4 rounded-2xl transition-all font-bold">
+                                    <i data-lucide="phone-call" class="w-5 h-5"></i>
+                                    +91 8084970887
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                        <!-- Right Column (Charts) -->
-                        <div class="lg:col-span-8 flex flex-col gap-6">
-                            <!-- Revenue Chart -->
+                <!-- My Bookings Section -->
+                <div id="my-bookings-section" class="section-content hidden"></div>
+
+                <!-- New Booking Section (Ported from booking.html) -->
+                <div id="new-booking-section" class="section-content hidden">
+                    <div class="max-w-4xl mx-auto">
+                        <div class="flex items-center justify-between mb-8">
+                            <h2 class="text-4xl font-display font-black uppercase tracking-tighter text-slate-900">
+                                Reservation Console</h2>
+                            <button onclick="showSection('my-bookings')"
+                                class="text-slate-600 font-extrabold uppercase tracking-widest text-[10px] hover:text-black transition-colors bg-slate-100 px-4 py-2 rounded-full border border-slate-200">Cancel
+                                Booking</button>
+                        </div>
+
+                        <!-- Progress Steps -->
+                        <div class="flex items-center justify-center mb-12">
+                            <div class="flex items-center gap-4">
+                                <div id="booking-step-1-indicator"
+                                    class="step-active w-10 h-10 rounded-full flex items-center justify-center font-black text-sm shadow-lg">
+                                    1</div>
+                                <div class="w-12 h-1 bg-slate-200 rounded-full"></div>
+                                <div id="booking-step-2-indicator"
+                                    class="step-pending w-10 h-10 rounded-full flex items-center justify-center font-black text-sm">
+                                    2</div>
+                                <div class="w-12 h-1 bg-slate-200 rounded-full"></div>
+                                <div id="booking-step-3-indicator"
+                                    class="step-pending w-10 h-10 rounded-full flex items-center justify-center font-black text-sm">
+                                    3</div>
+                                <div class="w-12 h-1 bg-slate-200 rounded-full"></div>
+                                <div id="booking-step-4-indicator"
+                                    class="step-pending w-10 h-10 rounded-full flex items-center justify-center font-black text-sm">
+                                    4</div>
+                            </div>
+                        </div>
+
+                        <!-- Step 1: Select Type -->
+                        <div id="booking-step-1" class="booking-step-content">
+                            <div class="grid md:grid-cols-2 gap-8">
+                                <div onclick="selectBookingType('weekly')" id="weeklyCard"
+                                    class="booking-type-card bg-white rounded-[2.5rem] p-10 border-4 border-slate-100 cursor-pointer hover:border-primary transition-all group hover:shadow-2xl active:scale-95">
+                                    <div class="flex items-center justify-between mb-6">
+                                        <div
+                                            class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center group-hover:bg-primary transition-colors">
+                                            <i data-lucide="calendar-days"
+                                                class="w-8 h-8 text-blue-500 group-hover:text-black"></i>
+                                        </div>
+                                        <span class="text-4xl font-black font-display tracking-tighter">₹200</span>
+                                    </div>
+                                    <h3 class="font-display text-3xl font-black uppercase mb-4 tracking-tighter">Weekly
+                                        Pass</h3>
+                                    <ul class="text-sm text-slate-700 space-y-3 font-bold">
+                                        <li class="flex items-center gap-3"><i data-lucide="zap"
+                                                class="w-4 h-4 text-primary-dark"></i> Mon-Sat High Intensity</li>
+                                        <li class="flex items-center gap-3"><i data-lucide="zap"
+                                                class="w-4 h-4 text-primary-dark"></i> 9 AM - 6 PM Access</li>
+                                        <li class="flex items-center gap-3"><i data-lucide="zap"
+                                                class="w-4 h-4 text-primary-dark"></i> Professional Coaching</li>
+                                    </ul>
+                                </div>
+                                <div onclick="selectBookingType('monthly')" id="monthlyCard"
+                                    class="booking-type-card bg-white rounded-[2.5rem] p-10 border-4 border-slate-100 cursor-pointer hover:border-primary transition-all group relative overflow-hidden hover:shadow-2xl active:scale-95">
+                                    <div
+                                        class="absolute top-0 right-0 bg-primary text-black text-[10px] font-black px-6 py-2 rounded-bl-[1.5rem] uppercase tracking-widest shadow-xl">
+                                        Best Value</div>
+                                    <div class="flex items-center justify-between mb-6">
+                                        <div
+                                            class="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center group-hover:bg-primary transition-colors">
+                                            <i data-lucide="star"
+                                                class="w-8 h-8 text-primary-dark group-hover:text-black"></i>
+                                        </div>
+                                        <span
+                                            class="text-4xl font-black font-display tracking-tighter text-slate-900">₹500</span>
+                                    </div>
+                                    <h3 class="font-display text-3xl font-black uppercase mb-4 tracking-tighter">Monthly
+                                        Pass</h3>
+                                    <ul class="text-sm text-slate-700 space-y-3 font-bold">
+                                        <li class="flex items-center gap-3"><i data-lucide="zap"
+                                                class="w-4 h-4 text-primary-dark"></i> Unlimited Month Access</li>
+                                        <li class="flex items-center gap-3"><i data-lucide="zap"
+                                                class="w-4 h-4 text-primary-dark"></i> Premium Mentorship</li>
+                                        <li class="flex items-center gap-3"><i data-lucide="zap"
+                                                class="w-4 h-4 text-primary-dark"></i> Save 60% Over Weekly</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Month & Players -->
+                        <div id="booking-step-2" class="booking-step-content hidden max-w-lg mx-auto">
+                            <div class="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-2xl">
+                                <div class="mb-8">
+                                    <label
+                                        class="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 mb-4">Target
+                                        Training Month</label>
+                                    <select id="monthSelect"
+                                        class="w-full px-6 py-5 bg-slate-50 border-2 border-transparent focus:border-primary focus:bg-white rounded-2xl outline-none font-bold text-lg transition-all appearance-none cursor-pointer"
+                                        onchange="updateAvailability()"></select>
+                                </div>
+
+                                <div class="mb-8 p-6 bg-slate-50 rounded-3xl">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <span
+                                            class="text-[10px] font-black uppercase tracking-widest text-slate-600">Available
+                                            Capacity</span>
+                                        <span id="availableSlots" class="font-black text-blue-600 text-lg">10</span>
+                                    </div>
+                                    <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                                        <div id="availabilityBar"
+                                            class="h-full bg-blue-500 rounded-full transition-all duration-700"
+                                            style="width: 0%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-10">
+                                    <label
+                                        class="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 mb-4">Number
+                                        of Participants</label>
+                                    <div
+                                        class="flex items-center justify-between bg-slate-50 p-3 rounded-2xl border-2 border-slate-200">
+                                        <button onclick="adjustPlayers(-1)"
+                                            class="w-14 h-14 bg-white rounded-xl shadow-lg flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all active:scale-90"><i
+                                                data-lucide="minus" class="w-6 h-6"></i></button>
+                                        <span id="playerCount"
+                                            class="text-4xl font-black font-display w-20 text-center">1</span>
+                                        <button onclick="adjustPlayers(1)"
+                                            class="w-14 h-14 bg-white rounded-xl shadow-lg flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all active:scale-90"><i
+                                                data-lucide="plus" class="w-6 h-6"></i></button>
+                                    </div>
+                                </div>
+
+                                <div
+                                    class="p-8 bg-black rounded-[2rem] text-white flex items-center justify-between mb-8 shadow-xl">
+                                    <span class="text-xs font-black uppercase tracking-widest opacity-60">Final
+                                        Price</span>
+                                    <span id="totalAmount"
+                                        class="text-4xl font-black font-display text-primary tracking-tighter">₹500</span>
+                                </div>
+
+                                <button onclick="goToBookingStep(3)"
+                                    class="w-full bg-primary text-black py-5 rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-primary-dark transition-all shadow-xl hover:-translate-y-1 active:translate-y-0">Proceed
+                                    to Security Link</button>
+                                <button onclick="goToBookingStep(1)"
+                                    class="w-full mt-6 text-slate-400 font-bold text-xs hover:text-black hover:underline transition-colors uppercase tracking-widest">Modified
+                                    Selection</button>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Payment -->
+                        <div id="booking-step-3" class="booking-step-content hidden max-w-lg mx-auto">
+                            <div class="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-2xl">
+                                <div
+                                    class="mb-10 p-8 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200">
+                                    <h3 class="font-black uppercase tracking-widest text-xs mb-6 text-slate-600">Order
+                                        Summary</h3>
+                                    <div class="space-y-4 font-bold text-sm">
+                                        <div class="flex justify-between border-b border-slate-200 pb-3"><span>Package
+                                                Type</span><span id="summaryType" class="text-slate-900">Monthly</span>
+                                        </div>
+                                        <div class="flex justify-between border-b border-slate-200 pb-3">
+                                            <span>Selected Month</span><span id="summaryMonth"
+                                                class="text-slate-900">May 2026</span>
+                                        </div>
+                                        <div class="flex justify-between border-b border-slate-200 pb-3"><span>Student
+                                                Count</span><span id="summaryPlayers" class="text-slate-900">1</span>
+                                        </div>
+                                        <div
+                                            class="flex justify-between text-2xl pt-2 font-display uppercase tracking-tight font-black">
+                                            <span class="text-slate-400">Total</span><span id="summaryTotal"
+                                                class="text-primary-dark">₹500</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="text-center mb-10">
+                                    <p
+                                        class="text-xs font-black uppercase tracking-[0.2em] text-slate-900 mb-6 underline decoration-primary decoration-4">
+                                        Security Verification Required</p>
+                                    <div class="text-center mb-8">
+                                        <div
+                                            class="relative inline-block p-4 bg-white border-8 border-slate-50 rounded-[3rem] shadow-inner mb-6">
+                                            <img id="paymentQRCode"
+                                                src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=8084970887@ybl%26pn=DribbleGround%26am=500%26cu=INR"
+                                                alt="Payment QR Scanner"
+                                                class="w-48 h-48 mx-auto rounded-[2rem] object-cover shadow-lg">
+                                            <div
+                                                class="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap shadow-xl border-4 border-white">
+                                                Official Merchant</div>
+                                        </div>
+                                        <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-4">
+                                            Scan & Pay the Exact amount above</p>
+                                    </div>
+                                </div>
+
+                                <button onclick="confirmPayment()"
+                                    class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-black transition-all shadow-xl hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-3">
+                                    <i data-lucide="check-circle" class="w-6 h-6 text-primary"></i>
+                                    I Have Paid
+                                </button>
+                                <button onclick="goToBookingStep(2)"
+                                    class="w-full mt-6 text-slate-400 font-bold text-xs hover:text-black transition-colors uppercase tracking-widest">Previous
+                                    Step</button>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Final Screen -->
+                        <div id="booking-step-4" class="booking-step-content hidden text-center max-w-xl mx-auto py-10">
                             <div
-                                class="bg-white rounded-3xl p-6 border border-neutral-100 shadow-soft h-[320px] flex flex-col">
-                                <div class="flex justify-between items-center mb-6">
-                                    <h3 class="font-semibold text-lg text-neutral-900">Revenue</h3>
-                                    <div class="flex gap-4">
-                                        <div class="flex items-center gap-2">
-                                            <div class="w-3 h-3 rounded-full bg-sidebar"></div>
-                                            <span class="text-xs text-neutral-500">Income</span>
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <div class="w-3 h-3 rounded-full bg-primary"></div>
-                                            <span class="text-xs text-neutral-500">Expenses</span>
-                                        </div>
-                                    </div>
-                                </div>
+                                class="w-32 h-32 bg-green-100 rounded-[2.5rem] flex items-center justify-center mx-auto mb-10 rotate-6 group hover:rotate-0 transition-transform shadow-lg">
+                                <i data-lucide="check" class="w-16 h-16 text-green-600 animate-bounce"></i>
+                            </div>
+                            <h2 class="text-5xl font-display font-black uppercase tracking-tighter text-slate-900 mb-4">
+                                Registration Secured!</h2>
+                            <p class="text-slate-500 font-bold text-lg mb-12">Your official academy pass is now active
+                                and verified.</p>
 
-                                <div class="flex items-baseline gap-2 mb-4">
-                                    <span class="text-3xl font-bold tracking-tight text-neutral-900">$193.000</span>
-                                    <span class="text-sm font-medium text-primary flex items-center gap-1">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round" data-lucide="trending-up"
-                                            class="lucide lucide-trending-up w-3 h-3">
-                                            <path d="M16 7h6v6"></path>
-                                            <path d="m22 7-8.5 8.5-5-5L2 17"></path>
-                                        </svg> +35% from last month
-                                    </span>
+                            <div
+                                class="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-2xl mb-12 text-left space-y-5">
+                                <div class="flex justify-between border-b border-slate-100 pb-4"><span
+                                        class="text-slate-600 font-black uppercase text-[10px] tracking-widest">Official
+                                        Reference</span><span id="confirmBookingId"
+                                        class="font-mono font-black text-slate-900 text-lg leading-none">REF-98765</span>
                                 </div>
-
-                                <!-- Bar Chart Visual -->
-                                <div class="flex-1 flex items-end justify-between gap-2 md:gap-4 px-2">
-                                    <!-- Bar Pair -->
-                                    <div class="flex flex-col justify-end items-center gap-2 w-full">
-                                        <div class="flex items-end gap-1 h-32 w-full justify-center">
-                                            <div class="md:w-4 w-3 bg-black/80 rounded-t-sm h-[60%]"></div>
-                                            <div class="w-3 md:w-4 bg-primary rounded-t-sm h-[40%]"></div>
-                                        </div>
-                                    </div>
-                                    <!-- Bar Pair -->
-                                    <div class="flex flex-col justify-end items-center gap-2 w-full">
-                                        <div class="flex gap-1 w-full h-32 gap-x-1 gap-y-1 items-end justify-center">
-                                            <div class="w-3 md:w-4 bg-sidebar rounded-t-sm h-[45%]"></div>
-                                            <div class="w-3 md:w-4 bg-primary rounded-t-sm h-[55%]"></div>
-                                        </div>
-                                    </div>
-                                    <!-- Bar Pair -->
-                                    <div class="flex flex-col justify-end items-center gap-2 w-full">
-                                        <div class="flex items-end gap-1 h-32 w-full justify-center">
-                                            <div class="w-3 md:w-4 bg-sidebar rounded-t-sm h-[70%]"></div>
-                                            <div class="w-3 md:w-4 bg-primary rounded-t-sm h-[35%]"></div>
-                                        </div>
-                                    </div>
-                                    <!-- Bar Pair -->
-                                    <div class="flex flex-col justify-end items-center gap-2 w-full">
-                                        <div class="flex items-end gap-1 h-32 w-full justify-center">
-                                            <div class="w-3 md:w-4 bg-sidebar rounded-t-sm h-[55%]"></div>
-                                            <div class="w-3 md:w-4 bg-primary rounded-t-sm h-[45%]"></div>
-                                        </div>
-                                    </div>
-                                    <!-- Bar Pair -->
-                                    <div class="flex flex-col justify-end items-center gap-2 w-full">
-                                        <div class="flex items-end gap-1 h-32 w-full justify-center">
-                                            <div class="w-3 md:w-4 bg-sidebar rounded-t-sm h-[85%]"></div>
-                                            <div class="w-3 md:w-4 bg-primary rounded-t-sm h-[60%]"></div>
-                                        </div>
-                                    </div>
-                                    <!-- Bar Pair -->
-                                    <div class="flex flex-col justify-end items-center gap-2 w-full">
-                                        <div class="flex items-end gap-1 h-32 w-full justify-center">
-                                            <div class="w-3 md:w-4 bg-sidebar rounded-t-sm h-[65%]"></div>
-                                            <div class="w-3 md:w-4 bg-primary rounded-t-sm h-[50%]"></div>
-                                        </div>
-                                    </div>
+                                <div class="flex justify-between border-b border-slate-100 pb-4"><span
+                                        class="text-slate-600 font-black uppercase text-[10px] tracking-widest">Training
+                                        Bundle</span><span id="confirmType" class="font-bold text-slate-900">Monthly
+                                        Pass</span></div>
+                                <div class="flex justify-between border-b border-slate-100 pb-4"><span
+                                        class="text-slate-600 font-black uppercase text-[10px] tracking-widest">Reserved
+                                        Schedule</span><span id="confirmMonth" class="font-bold text-slate-900">May
+                                        2026</span></div>
+                                <div class="flex justify-between border-b border-slate-100 pb-4"><span
+                                        class="text-slate-600 font-black uppercase text-[10px] tracking-widest">Participant
+                                        Count</span><span id="confirmPlayers"
+                                        class="font-bold text-slate-900 font-display text-xl">1</span></div>
+                                <div class="flex justify-between pt-2"><span
+                                        class="text-slate-600 font-black uppercase text-[10px] tracking-widest">Total
+                                        Transaction</span><span id="confirmAmount"
+                                        class="font-display font-black text-3xl text-green-600 tracking-tighter">₹500</span>
                                 </div>
                             </div>
 
-                            <!-- Sales Report -->
-                            <div
-                                class="bg-white rounded-3xl p-6 border border-neutral-100 shadow-soft h-[240px] flex flex-col">
-                                <div class="flex justify-between items-center mb-6">
-                                    <h3 class="font-semibold text-lg text-neutral-900">Sales Report</h3>
-                                    <button class="text-neutral-400 hover:text-neutral-600"><svg
-                                            xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round" data-lucide="more-horizontal"
-                                            class="lucide lucide-more-horizontal w-5 h-5">
-                                            <circle cx="12" cy="12" r="1"></circle>
-                                            <circle cx="19" cy="12" r="1"></circle>
-                                            <circle cx="5" cy="12" r="1"></circle>
-                                        </svg></button>
-                                </div>
-
-                                <div class="flex-1 flex flex-col justify-center gap-6">
-                                    <!-- Bar 1 -->
-                                    <div>
-                                        <div class="flex justify-between text-xs mb-1.5 font-medium">
-                                            <span class="text-neutral-500 w-24">Product Launched</span>
-                                            <span class="text-orange-500">(233)</span>
-                                        </div>
-                                        <div class="w-full h-2.5 bg-neutral-100 rounded-full overflow-hidden">
-                                            <div class="h-full bg-yellow-400 w-[45%] rounded-full"></div>
-                                        </div>
-                                    </div>
-                                    <!-- Bar 2 -->
-                                    <div>
-                                        <div class="flex justify-between text-xs mb-1.5 font-medium">
-                                            <span class="text-neutral-500 w-24">Ongoing Product</span>
-                                            <span class="text-orange-500">(23)</span>
-                                        </div>
-                                        <div class="w-full h-2.5 bg-neutral-100 rounded-full overflow-hidden">
-                                            <div class="h-full bg-yellow-400 w-[25%] rounded-full"></div>
-                                        </div>
-                                    </div>
-                                    <!-- Bar 3 -->
-                                    <div>
-                                        <div class="flex justify-between text-xs mb-1.5 font-medium">
-                                            <span class="text-neutral-500 w-24">Product Sold</span>
-                                            <span class="text-orange-500">(482)</span>
-                                        </div>
-                                        <div class="w-full h-2.5 bg-neutral-100 rounded-full overflow-hidden">
-                                            <div class="h-full bg-yellow-400 w-[85%] rounded-full"></div>
-                                        </div>
-                                    </div>
-                                    <!-- Scale -->
-                                    <div class="flex justify-between text-[10px] text-neutral-400 px-1 mt-1">
-                                        <span>0</span>
-                                        <span>100</span>
-                                        <span>200</span>
-                                        <span>300</span>
-                                        <span>400</span>
-                                    </div>
+                            <div class="flex flex-col gap-4 max-w-sm mx-auto">
+                                <button onclick="sendWhatsAppConfirmation()"
+                                    class="w-full bg-[#25D366] text-white px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-[#128C7E] transition-all shadow-xl flex items-center justify-center gap-3">
+                                    <i data-lucide="message-circle" class="w-5 h-5"></i>
+                                    Verify on WhatsApp
+                                </button>
+                                <div class="flex flex-col sm:flex-row gap-4">
+                                    <button onclick="showSection('my-bookings')"
+                                        class="flex-1 bg-black text-white px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all shadow-lg">Go
+                                        to Dashboard</button>
+                                    <button onclick="showSection('documents')"
+                                        class="flex-1 bg-primary text-black px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-primary-dark transition-all shadow-lg">Academy
+                                        Files</button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Right Sidebar Panel -->
-                <div class="w-full xl:w-80 shrink-0 flex flex-col gap-6">
-                    <!-- Total View Performance -->
-                    <div class="bg-white rounded-3xl p-6 border border-neutral-100 shadow-soft flex flex-col h-auto">
-                        <h3 class="font-semibold text-lg text-neutral-900 mb-6">Total View Performance</h3>
+                <!-- Admin Board -->
+                <div id="bookings-section" class="section-content hidden"></div>
+                <div id="admin-section" class="section-content hidden"></div>
 
-                        <!-- Donut Chart -->
-                        <div class="relative w-48 h-48 mx-auto mb-6">
-                            <svg viewBox="0 0 100 100" class="w-full h-full transform -rotate-90">
-                                <!-- Background Circle -->
-                                <circle cx="50" cy="50" r="40" fill="none" stroke="#f1f5f9" stroke-width="12"></circle>
-                                <!-- Segment 1 (Lime - 68%) -->
-                                <circle cx="50" cy="50" r="40" fill="none" stroke="#bef264" stroke-width="12"
-                                    stroke-dasharray="170 251" stroke-dashoffset="0"
-                                    class="transition-all duration-1000 ease-out"></circle>
-                                <!-- Segment 2 (Orange - 16%) -->
-                                <circle cx="50" cy="50" r="40" fill="none" stroke="#fb923c" stroke-width="12"
-                                    stroke-dasharray="40 251" stroke-dashoffset="-170"></circle>
-                                <!-- Segment 3 (Dark - 23%) -->
-                                <circle cx="50" cy="50" r="40" fill="none" stroke="#14532d" stroke-width="12"
-                                    stroke-dasharray="58 251" stroke-dashoffset="-210"></circle>
-                            </svg>
-                            <!-- Center Text -->
-                            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
-                                <span class="text-[10px] text-neutral-400">Total Count</span>
-                                <span class="text-2xl font-bold text-neutral-900 tracking-tight">565K</span>
-                            </div>
-                            <!-- Floating Percentages -->
-                            <div
-                                class="absolute top-0 right-0 bg-white shadow-sm border border-neutral-100 rounded-full px-1.5 py-0.5 text-[10px] font-bold text-neutral-700">
-                                23%</div>
-                            <div
-                                class="absolute top-8 left-0 bg-white shadow-sm border border-neutral-100 rounded-full px-1.5 py-0.5 text-[10px] font-bold text-neutral-700">
-                                16%</div>
-                            <div
-                                class="absolute bottom-4 left-6 bg-white shadow-sm border border-neutral-100 rounded-full px-1.5 py-0.5 text-[10px] font-bold text-neutral-700">
-                                68%</div>
-                        </div>
+                <!-- Other Sections -->
+                <div id="documents-section" class="section-content hidden"></div>
+            </div>
+        </main>
+    </div>
 
-                        <p class="text-center text-xs text-neutral-500 mb-6 px-4">Here are some tips on how to improve
-                            your score.</p>
-
-                        <button
-                            class="w-full border border-neutral-200 rounded-xl py-2.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 mb-6">
-                            Guide Views
-                        </button>
-
-                        <div class="flex justify-center gap-4">
-                            <div class="flex items-center gap-1.5">
-                                <div class="w-2.5 h-2.5 rounded bg-chart-lime"></div>
-                                <span class="text-[10px] font-medium text-neutral-600">View Count</span>
-                            </div>
-                            <div class="flex items-center gap-1.5">
-                                <div class="w-2.5 h-2.5 rounded bg-chart-green"></div>
-                                <span class="text-[10px] font-medium text-neutral-600">Percentage</span>
-                            </div>
-                            <div class="flex items-center gap-1.5">
-                                <div class="w-2.5 h-2.5 rounded bg-chart-orange"></div>
-                                <span class="text-[10px] font-medium text-neutral-600">Sales</span>
-                            </div>
-                        </div>
+    <!-- Modals -->
+    <div id="userModal" class="fixed inset-0 z-[60] hidden">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div
+                class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+                <div class="p-8 border-b border-slate-100 flex justify-between items-center">
+                    <h3 id="modalTitle"
+                        class="text-2xl font-display font-black uppercase tracking-tight text-slate-900">Add Athlete
+                    </h3>
+                    <button onclick="hideUserModal()" class="p-2 hover:bg-slate-100 rounded-full transition-colors"><i
+                            data-lucide="x" class="w-6 h-6"></i></button>
+                </div>
+                <div class="p-8 space-y-6">
+                    <input type="hidden" id="modalUserId">
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Full
+                            Name</label>
+                        <input type="text" id="modalUserName"
+                            class="w-full px-5 py-4 bg-slate-50 border-2 border-transparent focus:border-primary focus:bg-white rounded-xl outline-none font-bold transition-all">
                     </div>
-
-                    <!-- Promo Card -->
-                    <div
-                        class="bg-gradient-to-br from-neutral-100 to-neutral-200 rounded-3xl p-6 border border-neutral-100 relative overflow-hidden flex flex-col h-[280px]">
-                        <!-- Decorative Shapes -->
-                        <div class="absolute -right-10 -top-10 w-40 h-40 bg-primary/40 rounded-full blur-2xl"></div>
-                        <div class="absolute bottom-0 right-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" data-lucide="sparkles"
-                                class="lucide lucide-sparkles w-32 h-32 text-primary opacity-50 -rotate-12 translate-x-8 translate-y-8">
-                                <path
-                                    d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z">
-                                </path>
-                                <path d="M20 2v4"></path>
-                                <path d="M22 4h-4"></path>
-                                <circle cx="4" cy="20" r="2"></circle>
-                            </svg>
-                        </div>
-
-                        <div class="relative z-10">
-                            <div class="w-8 h-8 bg-sidebar rounded-lg flex items-center justify-center mb-4">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" data-lucide="crown"
-                                    class="lucide lucide-crown w-4 h-4 text-primary">
-                                    <path
-                                        d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z">
-                                    </path>
-                                    <path d="M5 21h14"></path>
-                                </svg>
-                            </div>
-                            <h3 class="text-xl font-bold tracking-tight text-neutral-900 leading-tight mb-3">
-                                Level up your sales managing to thenext level.
-                            </h3>
-                            <p class="text-xs text-neutral-600 leading-relaxed mb-6 max-w-[200px]">
-                                An any way to manage sales with care and precision.
-                            </p>
-                            <button
-                                class="w-full bg-sidebar text-white rounded-xl py-3 text-sm font-semibold hover:bg-sidebar/90 transition-colors shadow-lg shadow-sidebar/20">
-                                Update to Siohioma+
-                            </button>
-                        </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Email
+                            Address</label>
+                        <input type="email" id="modalUserEmail"
+                            class="w-full px-5 py-4 bg-slate-50 border-2 border-transparent focus:border-primary focus:bg-white rounded-xl outline-none font-bold transition-all">
                     </div>
+                    <div>
+                        <label
+                            class="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Password</label>
+                        <input type="password" id="modalUserPassword"
+                            class="w-full px-5 py-4 bg-slate-50 border-2 border-transparent focus:border-primary focus:bg-white rounded-xl outline-none font-bold transition-all">
+                    </div>
+                </div>
+                <div class="p-8 bg-slate-50 flex gap-4">
+                    <button onclick="hideUserModal()"
+                        class="flex-1 px-6 py-4 rounded-xl font-bold text-slate-500 border border-slate-200 hover:bg-white transition-all">Cancel</button>
+                    <button onclick="saveUserFromModal()"
+                        class="flex-1 px-6 py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition-all shadow-lg">Save
+                        Record</button>
                 </div>
             </div>
         </div>
-    </main>
+    </div>
 
-    <script>
-        lucide.createIcons();
-    </script>
+    <script src="js/app.js"></script>
+    <script src="js/dashboard.js"></script>
 
 </body>
 
