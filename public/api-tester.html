@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏀 Basketball Booking - API Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .code-block {
+            background: #f3f4f6;
+            padding: 12px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 0.85em;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .endpoint {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 5px;
+            align-items: center;
+        }
+
+        .method {
+            padding: 4px 10px;
+            border-radius: 3px;
+            font-weight: 600;
+            font-size: 0.85em;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .get {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .post {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .put {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .delete {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .url {
+            color: #666;
+            font-size: 0.9em;
+            font-family: 'Courier New', monospace;
+            flex: 1;
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .info-box p {
+            color: #1e40af;
+            margin: 0;
+        }
+
+        .demo-output {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            padding: 20px;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin: 15px 0;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            color: #666;
+        }
+
+        .feature-list li:before {
+            content: "✓ ";
+            color: #10b981;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏀 Basketball Booking System</h1>
+            <p>Version 2.0.0 - Local Development Server</p>
+            <div class="status">✅ Server Running on Port 3001</div>
+        </header>
+
+        <div class="grid">
+            <!-- Quick Start Card -->
+            <div class="card">
+                <h2>🚀 Quick Start</h2>
+                <div class="info-box">
+                    <p><strong>Default Admin Account:</strong></p>
+                    <p>Email: <code>admin@basketball.local</code></p>
+                    <p>Password: <code>Admin@123456</code></p>
+                </div>
+                <p>This local server includes:</p>
+                <ul class="feature-list">
+                    <li>In-memory database (no PostgreSQL needed)</li>
+                    <li>2 sample courts with availability</li>
+                    <li>Full JWT authentication</li>
+                    <li>Admin dashboard features</li>
+                    <li>Complete API endpoints</li>
+                </ul>
+                <div class="button-group">
+                    <button class="btn-primary" onclick="testHealth()">Test API Health</button>
+                    <button class="btn-success" onclick="testLogin()">Test Login</button>
+                </div>
+            </div>
+
+            <!-- Core Features Card -->
+            <div class="card">
+                <h2>⚙️ Features</h2>
+                <ul class="feature-list">
+                    <li>User Registration & Login</li>
+                    <li>JWT Token Management</li>
+                    <li>Court Listing & Details</li>
+                    <li>Booking Management</li>
+                    <li>Admin Dashboard</li>
+                    <li>Audit Logging</li>
+                    <li>Input Validation</li>
+                    <li>Error Handling</li>
+                </ul>
+                <div class="button-group">
+                    <button class="btn-primary" onclick="showEndpoints()">View Endpoints</button>
+                </div>
+            </div>
+
+            <!-- Authentication Card -->
+            <div class="card">
+                <h2>🔐 Authentication</h2>
+                <p>Login to get access and refresh tokens:</p>
+                <div class="endpoint">
+                    <span class="method post">POST</span>
+                    <span class="url">/api/v1/auth/login</span>
+                </div>
+                <div class="code-block">
+{
+  "email": "admin@basketball.local",
+  "password": "Admin@123456"
+}
+                </div>
+                <p style="margin-top: 10px; color: #666; font-size: 0.9em;">Response includes accessToken (2h) and refreshToken (7d)</p>
+                <div class="button-group">
+                    <button class="btn-primary" onclick="testLogin()">Test Login</button>
+                </div>
+            </div>
+
+            <!-- Bookings Card -->
+            <div class="card">
+                <h2>📅 Bookings</h2>
+                <p>Manage court reservations:</p>
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <span class="url">/api/v1/courts</span>
+                </div>
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <span class="url">/api/v1/courts/{id}/availability</span>
+                </div>
+                <div class="endpoint">
+                    <span class="method post">POST</span>
+                    <span class="url">/api/v1/bookings</span>
+                </div>
+                <div class="button-group">
+                    <button class="btn-primary" onclick="testCourts()">View Courts</button>
+                </div>
+            </div>
+
+            <!-- Admin Features Card -->
+            <div class="card">
+                <h2>👨‍💼 Admin Features</h2>
+                <p>Administrative dashboard endpoints:</p>
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <span class="url">/api/v1/admin/stats</span>
+                </div>
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <span class="url">/api/v1/admin/bookings</span>
+                </div>
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <span class="url">/api/v1/admin/users</span>
+                </div>
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <span class="url">/api/v1/admin/audit-logs</span>
+                </div>
+                <div class="button-group">
+                    <button class="btn-primary" onclick="testAdminStats()">View Admin Stats</button>
+                </div>
+            </div>
+
+            <!-- API Testing Card -->
+            <div class="card">
+                <h2>🧪 Live Test Console</h2>
+                <div id="demo-output" class="demo-output" style="display:none;"></div>
+                <div class="button-group">
+                    <button class="btn-primary" onclick="clearOutput()">Clear</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Endpoints Reference -->
+        <div class="card" style="margin-bottom: 20px;">
+            <h2>📚 All Endpoints Reference</h2>
+            
+            <h3 style="color: #667eea; margin-top: 20px;">Authentication</h3>
+            <div class="endpoint">
+                <span class="method post">POST</span>
+                <span class="url">/api/v1/auth/register</span>
+            </div>
+            <div class="endpoint">
+                <span class="method post">POST</span>
+                <span class="url">/api/v1/auth/login</span>
+            </div>
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="url">/api/v1/auth/me</span>
+            </div>
+
+            <h3 style="color: #667eea; margin-top: 20px;">Courts</h3>
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="url">/api/v1/courts</span>
+            </div>
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="url">/api/v1/courts/:courtId</span>
+            </div>
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="url">/api/v1/courts/:courtId/availability</span>
+            </div>
+
+            <h3 style="color: #667eea; margin-top: 20px;">Bookings</h3>
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="url">/api/v1/bookings</span>
+            </div>
+            <div class="endpoint">
+                <span class="method post">POST</span>
+                <span class="url">/api/v1/bookings</span>
+            </div>
+            <div class="endpoint">
+                <span class="method put">PUT</span>
+                <span class="url">/api/v1/bookings/:bookingId</span>
+            </div>
+            <div class="endpoint">
+                <span class="method delete">DELETE</span>
+                <span class="url">/api/v1/bookings/:bookingId</span>
+            </div>
+
+            <h3 style="color: #667eea; margin-top: 20px;">Admin</h3>
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="url">/api/v1/admin/bookings</span>
+            </div>
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="url">/api/v1/admin/stats</span>
+            </div>
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="url">/api/v1/admin/users</span>
+            </div>
+            <div class="endpoint">
+                <span class="method delete">DELETE</span>
+                <span class="url">/api/v1/admin/users/:userId</span>
+            </div>
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="url">/api/v1/admin/audit-logs</span>
+            </div>
+
+            <h3 style="color: #667eea; margin-top: 20px;">System</h3>
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="url">/health</span>
+            </div>
+        </div>
+
+        <footer>
+            <p>🚀 Basketball Booking System v2.0.0 - Production Grade Local Development</p>
+            <p>Ready to review? Check the browser console (F12) for detailed responses!</p>
+        </footer>
+    </div>
+
+    <script>
+        let accessToken = null;
+
+        async function makeRequest(method, endpoint, body = null) {
+            const output = document.getElementById('demo-output');
+            output.style.display = 'block';
+            
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            if (accessToken) {
+                headers['Authorization'] = `Bearer ${accessToken}`;
+            }
+            
+            const options = {
+                method,
+                headers
+            };
+            
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3001${endpoint}`, options);
+                const data = await response.json();
+                
+                const timestamp = new Date().toLocaleTimeString();
+                output.innerHTML += `<div>[${timestamp}] ${method} ${endpoint}</div>`;
+                output.innerHTML += `<div style="color: #fbbf24;">Status: ${response.status}</div>`;
+                output.innerHTML += `<div>${JSON.stringify(data, null, 2)}</div><div style="margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;"></div>`;
+                output.scrollTop = output.scrollHeight;
+                
+                return data;
+            } catch (error) {
+                output.innerHTML += `<div style="color: #f87171;">[ERROR] ${error.message}</div>`;
+            }
+        }
+
+        async function testHealth() {
+            await makeRequest('GET', '/health');
+        }
+
+        async function testLogin() {
+            const data = await makeRequest('POST', '/api/v1/auth/login', {
+                email: 'admin@basketball.local',
+                password: 'Admin@123456'
+            });
+            
+            if (data.accessToken) {
+                accessToken = data.accessToken;
+                alert('✅ Login successful! Token saved for authenticated requests.');
+            }
+        }
+
+        async function testCourts() {
+            await makeRequest('GET', '/api/v1/courts');
+        }
+
+        async function testAdminStats() {
+            if (!accessToken) {
+                alert('Please login first!');
+                await testLogin();
+            }
+            await makeRequest('GET', '/api/v1/admin/stats');
+        }
+
+        function showEndpoints() {
+            alert('All endpoints are listed below! Try clicking "Test Login" first to get an access token.');
+        }
+
+        function clearOutput() {
+            document.getElementById('demo-output').innerHTML = '';
+            document.getElementById('demo-output').style.display = 'none';
+        }
+
+        // Auto-test health on load
+        window.addEventListener('load', () => {
+            testHealth();
+        });
+    </script>
+</body>
+</html>

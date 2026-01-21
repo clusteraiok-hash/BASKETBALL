@@ -207,427 +207,151 @@ const Validation = {
     }
 };
 
+// ==================== API MANAGER ====================
+const Api = {
+    baseUrl: '/api',
+
+    async request(endpoint, options = {}) {
+        const token = localStorage.getItem('dg_token');
+        const headers = {
+            'Content-Type': 'application/json',
+            ...options.headers
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`${this.baseUrl}${endpoint}`, {
+            ...options,
+            headers
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || 'Something went wrong');
+        }
+        return data;
+    }
+};
+
 // ==================== USER MANAGER ====================
 class UserManager {
     constructor() {
-        this.users = this.loadUsers();
         this.currentUser = this.loadCurrentUser();
     }
 
-    // Load users from storage
-    loadUsers() {
-        const stored = Utils.storage.get(CONFIG.STORAGE_KEYS.USERS);
-        return stored ? stored : this.getDemoUsers();
-    }
-
-    // Load current user from storage
     loadCurrentUser() {
-        const stored = Utils.storage.get(CONFIG.STORAGE_KEYS.CURRENT_USER);
-        return stored ? stored : null;
+        const stored = localStorage.getItem('dg_current_user');
+        return stored ? JSON.parse(stored) : null;
     }
 
-    // Save users to storage
-    saveUsers() {
-        Utils.storage.set(CONFIG.STORAGE_KEYS.USERS, this.users);
-    }
-
-    // Save current user to storage
-    saveCurrentUser(user) {
-        this.currentUser = user;
-        if (user) {
-            Utils.storage.set(CONFIG.STORAGE_KEYS.CURRENT_USER, user);
-        } else {
-            Utils.storage.remove(CONFIG.STORAGE_KEYS.CURRENT_USER);
+    async register(userData) {
+        try {
+            const data = await Api.request('/auth/register', {
+                method: 'POST',
+                body: JSON.stringify(userData)
+            });
+            this.setSession(data);
+            return { success: true, user: data };
+        } catch (error) {
+            return { success: false, error: error.message };
         }
     }
 
-    // Get demo users
-    getDemoUsers() {
-        return [
-            {
-                id: 'admin_001',
-                name: 'Admin User',
-                email: 'autionix2@gmail.com',
-                phone: '8084970887',
-                password: '12345678',
-                role: 'admin',
-                verified: true,
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: 'user_001',
-                name: 'Rahul Sharma',
-                email: 'rahul@example.com',
-                phone: '9876543210',
-                password: 'player123',
-                role: 'user',
-                verified: true,
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: 'user_002',
-                name: 'Priya Patel',
-                email: 'priya@example.com',
-                phone: '9876543211',
-                password: 'player123',
-                role: 'user',
-                verified: false,
-                createdAt: new Date().toISOString()
-            }
-        ];
+    async login(email, password) {
+        try {
+            const data = await Api.request('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ email, password })
+            });
+
+            this.setSession(data);
+            return { success: true, user: data };
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
     }
 
-    // Register new user
-    register(userData) {
-        // Check if email already exists
-        if (this.users.find(u => u.email === userData.email)) {
-            return { success: false, error: 'Email already registered' };
-        }
-
-        // Check if phone already exists (only if provided)
-        if (userData.phone && this.users.find(u => u.phone === userData.phone)) {
-            return { success: false, error: 'Phone number already registered' };
-        }
-
-        // Create new user
-        const newUser = {
-            id: Utils.generateId(),
-            name: userData.name,
-            email: userData.email,
-            phone: userData.phone,
-            password: userData.password, // In real app, this should be hashed
-            role: 'user',
-            verified: false,
-            createdAt: new Date().toISOString()
-        };
-
-        this.users.push(newUser);
-        this.saveUsers();
-
-        // Auto login after registration
-        this.saveCurrentUser(newUser);
-
-        return { success: true, user: newUser };
+    setSession(data) {
+        this.currentUser = data;
+        localStorage.setItem('dg_token', data.token);
+        localStorage.setItem('dg_current_user', JSON.stringify(data));
     }
 
-    // Login user
-    login(email, password) {
-        const user = this.users.find(u => u.email === email && u.password === password);
-
-        if (!user) {
-            return { success: false, error: 'Invalid email or password' };
-        }
-
-        this.saveCurrentUser(user);
-        return { success: true, user: user };
-    }
-
-    // Logout user
     logout() {
-        this.saveCurrentUser(null);
+        this.currentUser = null;
+        localStorage.removeItem('dg_token');
+        localStorage.removeItem('dg_current_user');
         return { success: true };
     }
 
-    // Get current user
-    getCurrentUser() {
-        return this.currentUser;
-    }
-
-    // Check if user is logged in
     isLoggedIn() {
         return this.currentUser !== null;
     }
 
-    // Get user by ID
-    getUserById(userId) {
-        return this.users.find(u => u.id === userId);
-    }
-
-    // Update user profile
-    updateProfile(userId, updates) {
-        const userIndex = this.users.findIndex(u => u.id === userId);
-        if (userIndex === -1) {
-            return { success: false, error: 'User not found' };
-        }
-
-        this.users[userIndex] = { ...this.users[userIndex], ...updates };
-        this.saveUsers();
-
-        // Update current user if it's the same user
-        if (this.currentUser && this.currentUser.id === userId) {
-            this.saveCurrentUser(this.users[userIndex]);
-        }
-
-        return { success: true, user: this.users[userIndex] };
-    }
-
-    // Check if user is admin
     isAdmin() {
-        const user = this.getCurrentUser();
-        return user && user.role === 'admin';
+        return this.currentUser && this.currentUser.role === 'admin';
     }
 
-    // Get all users (admin only)
-    getAllUsers() {
-        return this.users;
-    }
-
-    // Delete user (admin only)
-    deleteUser(userId) {
-        const userIndex = this.users.findIndex(u => u.id === userId);
-        if (userIndex === -1) {
-            return { success: false, error: 'User not found' };
+    async getAllUsers() {
+        try {
+            return await Api.request('/users');
+        } catch (error) {
+            console.error('Fetch users error:', error);
+            return [];
         }
-
-        // Prevent deleting the main admin
-        if (this.users[userIndex].email === 'autionix2@gmail.com') {
-            return { success: false, error: 'Major administrator cannot be deleted' };
-        }
-
-        this.users.splice(userIndex, 1);
-        this.saveUsers();
-        return { success: true };
     }
 }
 
 // ==================== BOOKING MANAGER ====================
 class BookingManager {
-    constructor() {
-        this.bookings = this.loadBookings();
-    }
-
-    // Load bookings from storage
-    loadBookings() {
-        const stored = Utils.storage.get(CONFIG.STORAGE_KEYS.BOOKINGS);
-        return stored ? stored : this.getDemoBookings();
-    }
-
-    // Save bookings to storage
-    saveBookings() {
-        Utils.storage.set(CONFIG.STORAGE_KEYS.BOOKINGS, this.bookings);
-    }
-
-    // Get demo bookings
-    getDemoBookings() {
-        return [
-            {
-                id: 'BK001',
-                userId: 'user_001',
-                userName: 'Rahul Sharma',
-                userEmail: 'rahul@example.com',
-                userPhone: '9876543210',
-                type: 'monthly',
-                month: '2026-01',
-                players: 1,
-                amount: CONFIG.MONTHLY_PRICE,
-                status: 'confirmed',
-                paymentId: 'TXN123456789',
-                createdAt: '2026-01-15T10:30:00.000Z',
-                confirmedAt: '2026-01-15T10:35:00.000Z',
-                expiresAt: null
-            },
-            {
-                id: 'BK002',
-                userId: 'user_002',
-                userName: 'Priya Patel',
-                userEmail: 'priya@example.com',
-                userPhone: '9876543211',
-                type: 'weekly',
-                month: '2026-01',
-                players: 1,
-                amount: CONFIG.WEEKLY_PRICE,
-                status: 'pending',
-                paymentId: null,
-                createdAt: '2026-01-20T14:00:00.000Z',
-                confirmedAt: null,
-                expiresAt: '2026-01-21T14:00:00.000Z'
-            },
-            {
-                id: 'BK003',
-                userId: 'user_001',
-                userName: 'Rahul Sharma',
-                userEmail: 'rahul@example.com',
-                userPhone: '9876543210',
-                type: 'monthly',
-                month: '2026-01',
-                players: 3,
-                amount: CONFIG.MONTHLY_PRICE * 3,
-                status: 'confirmed',
-                paymentId: 'TXN987654321',
-                createdAt: '2026-01-18T09:00:00.000Z',
-                confirmedAt: '2026-01-18T09:05:00.000Z',
-                expiresAt: null
-            }
-        ];
-    }
-
-    // Create new booking
-    createBooking(bookingData) {
-        // Check capacity for the month
-        const availableSlots = this.getAvailableSlots(bookingData.month);
-        if (availableSlots < bookingData.players) {
-            return {
-                success: false,
-                error: `Only ${availableSlots} slots available for this month`
-            };
+    async createBooking(bookingData) {
+        try {
+            const data = await Api.request('/bookings', {
+                method: 'POST',
+                body: JSON.stringify(bookingData)
+            });
+            return { success: true, booking: data };
+        } catch (error) {
+            return { success: false, error: error.message };
         }
-
-        // Check for duplicate booking
-        const existing = this.bookings.find(b =>
-            b.userId === bookingData.userId &&
-            b.month === bookingData.month &&
-            b.status !== 'cancelled'
-        );
-
-        if (existing) {
-            return {
-                success: false,
-                error: 'You already have a booking for this month'
-            };
-        }
-
-        // Create new booking
-        const newBooking = {
-            id: 'BK' + Date.now().toString().slice(-6),
-            userId: bookingData.userId,
-            userName: bookingData.userName,
-            userEmail: bookingData.userEmail,
-            userPhone: bookingData.userPhone,
-            type: bookingData.type,
-            month: bookingData.month,
-            players: bookingData.players,
-            amount: (bookingData.type === 'monthly' ? CONFIG.MONTHLY_PRICE : CONFIG.WEEKLY_PRICE) * bookingData.players,
-            status: 'pending',
-            paymentId: null,
-            createdAt: new Date().toISOString(),
-            confirmedAt: null,
-            expiresAt: new Date(Date.now() + CONFIG.PAYMENT_TIMEOUT_HOURS * 60 * 60 * 1000).toISOString()
-        };
-
-        this.bookings.push(newBooking);
-        this.saveBookings();
-
-        return { success: true, booking: newBooking };
     }
 
-    // Confirm payment for booking
-    confirmPayment(bookingId, transactionId) {
-        const booking = this.bookings.find(b => b.id === bookingId);
-        if (!booking) {
-            return { success: false, error: 'Booking not found' };
+    async confirmPayment(bookingId, transactionId) {
+        try {
+            const data = await Api.request(`/bookings/${bookingId}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ status: 'confirmed', paymentId: transactionId })
+            });
+            return { success: true, booking: data };
+        } catch (error) {
+            return { success: false, error: error.message };
         }
-
-        if (booking.status === 'confirmed') {
-            return { success: false, error: 'Payment already confirmed' };
-        }
-
-        if (booking.status === 'cancelled') {
-            return { success: false, error: 'Booking was cancelled' };
-        }
-
-        // Check if expired
-        if (booking.expiresAt && new Date() > new Date(booking.expiresAt)) {
-            booking.status = 'expired';
-            this.saveBookings();
-            return { success: false, error: 'Booking expired' };
-        }
-
-        booking.status = 'confirmed';
-        booking.paymentId = transactionId;
-        booking.confirmedAt = new Date().toISOString();
-        booking.expiresAt = null;
-
-        this.saveBookings();
-        return { success: true, booking: booking };
     }
 
-    // Cancel booking
-    cancelBooking(bookingId) {
-        const booking = this.bookings.find(b => b.id === bookingId);
-        if (!booking) {
-            return { success: false, error: 'Booking not found' };
+    async getAllBookings() {
+        try {
+            return await Api.request('/bookings');
+        } catch (error) {
+            console.error('Fetch all bookings error:', error);
+            return [];
         }
+    }
 
-        if (booking.status === 'cancelled') {
-            return { success: false, error: 'Booking already cancelled' };
+    async getBookingsByUser() {
+        try {
+            return await Api.request('/bookings/my');
+        } catch (error) {
+            console.error('Fetch my bookings error:', error);
+            return [];
         }
-
-        booking.status = 'cancelled';
-        booking.cancelledAt = new Date().toISOString();
-
-        this.saveBookings();
-        return { success: true, booking: booking };
     }
 
-    // Get all bookings
-    getAllBookings() {
-        // Update expired bookings first
-        this.updateExpiredBookings();
-        return this.bookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    }
-
-    // Get bookings by user
-    getBookingsByUser(userId) {
-        this.updateExpiredBookings();
-        return this.bookings
-            .filter(b => b.userId === userId)
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    }
-
-    // Get available slots for a month
+    // Local utility for frontend compatibility
     getAvailableSlots(month) {
-        const monthlyBookings = this.bookings.filter(b =>
-            b.month === month &&
-            b.status === 'confirmed'
-        );
-
-        const totalPlayers = monthlyBookings.reduce((sum, b) => sum + b.players, 0);
-        return Math.max(0, CONFIG.MAX_PLAYERS_PER_MONTH - totalPlayers);
-    }
-
-    // Get booking statistics
-    getStats() {
-        const now = new Date();
-        const currentMonth = now.toISOString().slice(0, 7);
-
-        const confirmed = this.bookings.filter(b => b.status === 'confirmed');
-        const pending = this.bookings.filter(b => b.status === 'pending');
-        const currentMonthBookings = confirmed.filter(b => b.month === currentMonth);
-
-        const monthlyRevenue = confirmed
-            .filter(b => b.month === currentMonth)
-            .reduce((sum, b) => sum + b.amount, 0);
-
-        const currentMonthPlayers = currentMonthBookings
-            .reduce((sum, b) => sum + b.players, 0);
-
-        return {
-            totalBookings: this.bookings.length,
-            activeBookings: confirmed.length,
-            pendingBookings: pending.length,
-            monthlyRevenue: monthlyRevenue,
-            currentMonthPlayers: currentMonthPlayers,
-            occupancyRate: Math.round((currentMonthPlayers / CONFIG.MAX_PLAYERS_PER_MONTH) * 100)
-        };
-    }
-
-    // Check and update expired bookings
-    updateExpiredBookings() {
-        const now = new Date();
-        let updated = false;
-
-        this.bookings.forEach(booking => {
-            if (booking.status === 'pending' &&
-                booking.expiresAt &&
-                new Date(booking.expiresAt) < now) {
-                booking.status = 'expired';
-                updated = true;
-            }
-        });
-
-        if (updated) {
-            this.saveBookings();
-        }
+        // For production, this should be handled by backend
+        return 10;
     }
 }
 

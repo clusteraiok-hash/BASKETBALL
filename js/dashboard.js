@@ -11,15 +11,50 @@ let bookingState = {
 };
 
 // Initialize Dashboard
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     lucide.createIcons();
     checkAdminAuth();
-    loadDashboardStats();
+    await loadInitialData();
     initializeMonths();
 });
 
+async function loadInitialData() {
+    showLoadingOverlay(true);
+    try {
+        await Promise.all([
+            loadDashboardStats(),
+            // Prefetch other critical data if needed
+        ]);
+    } catch (error) {
+        console.error('Initialization error:', error);
+        Utils.showToast('Failed to load dashboard data', 'error');
+    } finally {
+        showLoadingOverlay(false);
+    }
+}
+
+function showLoadingOverlay(show) {
+    let overlay = document.getElementById('loading-overlay');
+    if (!overlay && show) {
+        overlay = document.createElement('div');
+        overlay.id = 'loading-overlay';
+        overlay.className = 'fixed inset-0 bg-white/80 backdrop-blur-sm z-[100] flex items-center justify-center transition-opacity duration-300';
+        overlay.innerHTML = `
+            <div class="flex flex-col items-center gap-4">
+                <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <p class="text-sm font-black uppercase tracking-widest text-slate-900">Synchronizing Academy Data...</p>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+    }
+    if (overlay) {
+        overlay.style.opacity = show ? '1' : '0';
+        if (!show) setTimeout(() => overlay.remove(), 300);
+    }
+}
+
 function checkAdminAuth() {
-    const user = window.userManager.getCurrentUser();
+    const user = window.userManager.currentUser;
     if (user) {
         // Update user widget initials and names separately
         const initialEls = document.querySelectorAll('.current-user-initial');
@@ -41,7 +76,7 @@ function checkAdminAuth() {
 }
 
 // Sidebar Navigation
-function showSection(sectionId) {
+async function showSection(sectionId) {
     // Update Sidebar UI
     document.querySelectorAll('.sidebar-link').forEach(link => {
         link.classList.remove('active', 'bg-slate-50', 'text-slate-900');
@@ -64,29 +99,50 @@ function showSection(sectionId) {
     const targetSection = document.getElementById(sectionId + '-section');
     if (targetSection) {
         targetSection.classList.remove('hidden');
-        loadSectionData(sectionId);
+        await loadSectionData(sectionId);
     }
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-function loadSectionData(sectionId) {
-    switch (sectionId) {
-        case 'overview': loadDashboardStats(); break;
-        case 'bookings': renderAdminBookings(); break;
-        case 'my-bookings': renderMyBookings(); break;
-        case 'documents': renderDocumentsView(); break;
-        case 'crm': renderCRMView(); break;
-        case 'admin': renderAdminUsers(); break;
-        case 'new-booking': initializeBookingFlow(); break;
+async function loadSectionData(sectionId) {
+    showLoadingOverlay(true);
+    try {
+        switch (sectionId) {
+            case 'overview': await loadDashboardStats(); break;
+            case 'bookings': await renderAdminBookings(); break;
+            case 'my-bookings': await renderMyBookings(); break;
+            case 'documents': renderDocumentsView(); break;
+            case 'crm': await renderCRMView(); break;
+            case 'admin': await renderAdminUsers(); break;
+            case 'new-booking': initializeBookingFlow(); break;
+        }
+    } catch (error) {
+        Utils.showToast(`Error loading ${sectionId}: ` + error.message, 'error');
+    } finally {
+        showLoadingOverlay(false);
     }
 }
 
 // --- Section Renderers ---
 
-function loadDashboardStats() {
+async function loadDashboardStats() {
     if (!bookingManager) return;
-    const stats = bookingManager.getStats();
+    const bookings = await bookingManager.getAllBookings();
+    const users = await userManager.getAllUsers();
+
+    // Calculate stats locally from fetched data
+    const now = new Date();
+    const currentMonth = now.toISOString().slice(0, 7);
+    const confirmed = bookings.filter(b => b.status === 'confirmed');
+    const monthlyRevenue = confirmed
+        .filter(b => b.month === currentMonth)
+        .reduce((sum, b) => sum + b.amount, 0);
+    const currentMonthPlayers = confirmed
+        .filter(b => b.month === currentMonth)
+        .reduce((sum, b) => sum + b.players, 0);
+    const occupancyRate = Math.round((currentMonthPlayers / 10) * 100);
+
     const grid = document.getElementById('stats-grid');
     if (!grid) return;
 
@@ -94,41 +150,41 @@ function loadDashboardStats() {
         <div class="bg-white rounded-2xl p-6 text-slate-900 h-40 flex flex-col justify-between shadow-soft border border-slate-100">
             <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Active Bookings</p>
             <div class="flex items-baseline gap-2">
-                <span class="text-4xl font-bold text-primary-dark">${stats.activeBookings}</span>
-                <span class="text-[10px] text-slate-400">Real-time</span>
+                <span class="text-4xl font-bold text-primary-dark">${confirmed.length}</span>
+                <span class="text-[10px] text-slate-400">Live API</span>
             </div>
         </div>
         <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-soft h-40 flex flex-col justify-between">
             <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Revenue</p>
             <div>
-                <span class="text-3xl font-bold text-slate-900">${Utils.formatCurrency(stats.monthlyRevenue)}</span>
-                <p class="text-[10px] text-slate-400 mt-1">Estimated Earnings</p>
+                <span class="text-3xl font-bold text-slate-900">${Utils.formatCurrency(monthlyRevenue)}</span>
+                <p class="text-[10px] text-slate-400 mt-1">Confirmed Growth</p>
             </div>
         </div>
         <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-soft h-40 flex flex-col justify-between">
             <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Total Students</p>
-            <span class="text-3xl font-bold text-slate-900">${userManager.getAllUsers().length}</span>
+            <span class="text-3xl font-bold text-slate-900">${users.length}</span>
         </div>
         <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-soft h-40 flex flex-col justify-between">
             <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Occupancy</p>
             <div>
-                <span class="text-3xl font-bold text-slate-900">${stats.occupancyRate}%</span>
+                <span class="text-3xl font-bold text-slate-900">${occupancyRate}%</span>
                 <div class="w-full h-1.5 bg-slate-100 rounded-full mt-2 overflow-hidden">
-                    <div class="h-full bg-primary rounded-full" style="width: ${stats.occupancyRate}%"></div>
+                    <div class="h-full bg-primary rounded-full" style="width: ${occupancyRate}%"></div>
                 </div>
             </div>
         </div>
     `;
 }
 
-function renderAdminBookings() {
+async function renderAdminBookings() {
     const section = document.getElementById('bookings-section');
-    const bookings = bookingManager.getAllBookings();
+    const bookings = await bookingManager.getAllBookings();
     section.innerHTML = `
         <div class="flex justify-between items-center mb-8">
             <div>
                 <h2 class="text-3xl font-display font-bold uppercase tracking-tight text-slate-900 leading-tight">Academy Bookings</h2>
-                <p class="text-sm text-slate-400 font-medium">Overview of all student training schedules</p>
+                <p class="text-sm text-slate-400 font-medium">Overview of all student training schedules from cloud database</p>
             </div>
         </div>
         <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl overflow-hidden">
@@ -144,11 +200,11 @@ function renderAdminBookings() {
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
-                        ${bookings.length === 0 ? '<tr><td colspan="5" class="px-8 py-12 text-center text-slate-400 italic font-medium">No bookings recorded yet</td></tr>' : bookings.map(b => `
+                        ${bookings.length === 0 ? '<tr><td colspan="5" class="px-8 py-12 text-center text-slate-400 italic font-medium">No bookings recorded in database</td></tr>' : bookings.map(b => `
                             <tr class="hover:bg-slate-50 transition-colors group">
                                 <td class="px-8 py-6">
-                                    <p class="font-bold text-slate-900 leading-none mb-1">${b.userName}</p>
-                                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">${b.userEmail}</p>
+                                    <p class="font-bold text-slate-900 leading-none mb-1">${b.User?.name || 'Unknown'}</p>
+                                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">${b.User?.email || ''}</p>
                                 </td>
                                 <td class="px-8 py-6">
                                     <div class="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full border border-primary/20">
@@ -159,9 +215,14 @@ function renderAdminBookings() {
                                     <p class="text-sm font-bold text-slate-700">${new Date(b.month + '-01').toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}</p>
                                 </td>
                                 <td class="px-8 py-6">
-                                    <span class="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${b.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-orange-50 text-orange-600'}">
-                                        ${b.status}
-                                    </span>
+                                    <div class="flex items-center gap-3">
+                                        <span class="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${b.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-orange-50 text-orange-600'}">
+                                            ${b.status}
+                                        </span>
+                                        ${b.status === 'pending' ? `
+                                            <button onclick="confirmAdminBooking('${b.id}')" class="text-[10px] font-black uppercase tracking-widest text-primary-dark underline hover:no-underline">Approve</button>
+                                        ` : ''}
+                                    </div>
                                 </td>
                                 <td class="px-8 py-6 text-right">
                                     <p class="text-lg font-black text-slate-900">${Utils.formatCurrency(b.amount)}</p>
@@ -176,17 +237,27 @@ function renderAdminBookings() {
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-function renderMyBookings() {
+async function confirmAdminBooking(id) {
+    if (confirm('Approve this payment and confirm the training slot?')) {
+        const result = await bookingManager.confirmPayment(id, 'VERIFIED_BY_ADMIN');
+        if (result.success) {
+            Utils.showToast('Booking confirmed', 'success');
+            await renderAdminBookings();
+        } else {
+            Utils.showToast(result.error, 'error');
+        }
+    }
+}
+
+async function renderMyBookings() {
     const section = document.getElementById('my-bookings-section');
-    const user = userManager.getCurrentUser();
-    if (!user) return;
-    const bookings = bookingManager.getBookingsByUser(user.id);
+    const bookings = await bookingManager.getBookingsByUser();
 
     section.innerHTML = `
         <div class="flex justify-between items-center mb-10">
             <div>
                 <h2 class="text-3xl font-display font-bold uppercase tracking-tight text-slate-900 leading-tight">My Training Schedule</h2>
-                <p class="text-sm text-slate-400 font-medium">Your active passes and session history</p>
+                <p class="text-sm text-slate-400 font-medium">Your active passes and session history from cloud</p>
             </div>
             <button onclick="showSection('new-booking')" class="bg-primary text-black px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center gap-3 hover:bg-primary-dark transition-all shadow-xl shadow-primary/20 hover:-translate-y-1">
                 <i data-lucide="plus-circle" class="w-5 h-5"></i>
@@ -196,20 +267,15 @@ function renderMyBookings() {
         <div class="grid gap-8">
             ${bookings.length === 0 ? `
                 <div class="text-center py-24 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100">
-                    <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <i data-lucide="calendar" class="w-10 h-10 text-slate-200"></i>
-                    </div>
                     <p class="text-slate-900 font-bold text-xl mb-2">No Active Training Passes</p>
-                    <p class="text-slate-400 text-sm mb-8 max-w-xs mx-auto">Start your journey at Dribble Ground by booking your first session.</p>
-                    <button onclick="showSection('new-booking')" class="px-8 py-3 bg-primary text-black rounded-xl font-bold hover:scale-105 transition-transform">Book Now</button>
+                    <button onclick="showSection('new-booking')" class="px-8 py-3 bg-primary text-black rounded-xl font-bold">Book Now</button>
                 </div>
             ` : bookings.map(booking => `
                 <div class="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl hover:shadow-2xl transition-all group relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 -mr-16 -mt-16 rounded-full group-hover:bg-primary/10 transition-colors"></div>
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
                         <div class="flex items-center gap-6">
-                            <div class="w-16 h-16 bg-slate-50 rounded-[1.5rem] flex items-center justify-center group-hover:bg-primary transition-all rotate-3 group-hover:rotate-0 shadow-inner">
-                                <i data-lucide="basketball" class="w-8 h-8 text-slate-400 group-hover:text-black transition-colors"></i>
+                            <div class="w-16 h-16 bg-slate-50 rounded-[1.5rem] flex items-center justify-center group-hover:bg-primary transition-all">
+                                <i data-lucide="basketball" class="w-8 h-8 text-slate-400 group-hover:text-black"></i>
                             </div>
                             <div>
                                 <h3 class="font-black text-xl text-slate-900 uppercase tracking-tighter leading-none mb-2">${booking.type} Pass</h3>
@@ -218,13 +284,11 @@ function renderMyBookings() {
                                     <span class="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${booking.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-orange-50 text-orange-600'}">
                                         ${booking.status}
                                     </span>
-                                    <span class="text-[10px] text-slate-300 font-black tracking-widest uppercase">ID: ${booking.id}</span>
                                 </div>
                             </div>
                         </div>
                         <div class="flex flex-col md:text-right border-t md:border-t-0 border-slate-50 pt-6 md:pt-0">
                             <p class="text-3xl font-black text-slate-900 leading-none mb-1">${Utils.formatCurrency(booking.amount)}</p>
-                            <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest">Payment Confirmed</p>
                         </div>
                     </div>
                 </div>
@@ -270,10 +334,10 @@ function renderDocumentsView() {
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-function renderCRMView(filter = '') {
+async function renderCRMView(filter = '') {
     const section = document.getElementById('crm-section');
-    const users = userManager.getAllUsers().filter(u => u.role !== 'admin');
-    const bookings = bookingManager.getAllBookings();
+    const users = (await userManager.getAllUsers()).filter(u => u.role !== 'admin');
+    const bookings = await bookingManager.getAllBookings();
 
     const filteredUsers = users.filter(u =>
         u.name.toLowerCase().includes(filter.toLowerCase()) ||
@@ -309,7 +373,7 @@ function renderCRMView(filter = '') {
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         ${filteredUsers.map(user => {
-        const userBookings = bookings.filter(b => b.userId === user.id);
+        const userBookings = bookings.filter(b => b.UserId === user.id);
         const totalSpent = userBookings.reduce((sum, b) => b.status === 'confirmed' ? sum + b.amount : sum, 0);
         const lastBooking = userBookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
 
@@ -363,17 +427,17 @@ function filterCRM(val) {
     }
 }
 
-function renderAdminUsers() {
+async function renderAdminUsers() {
     const section = document.getElementById('admin-section');
-    const users = userManager.getAllUsers();
+    const users = await userManager.getAllUsers();
 
     section.innerHTML = `
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
             <div>
                 <h2 class="text-3xl font-display font-bold uppercase tracking-tight text-neutral-900">Student Directory</h2>
-                <p class="text-sm text-neutral-400 font-medium">Manage and monitor all registered athletes in the system</p>
+                <p class="text-sm text-neutral-400 font-medium">Managing athletes via PostgreSQL production engine</p>
             </div>
-            <button onclick="showAddUserModal()" class="bg-slate-900 text-white px-8 py-4 rounded-[1.25rem] font-bold flex items-center gap-3 hover:bg-black transition-all shadow-lg hover:-translate-y-1 active:translate-y-0">
+            <button onclick="showAddUserModal()" class="bg-slate-900 text-white px-8 py-4 rounded-[1.25rem] font-bold flex items-center gap-3">
                 <i data-lucide="plus" class="w-5 h-5 text-primary"></i>
                 Add New Athlete
             </button>
@@ -386,7 +450,6 @@ function renderAdminUsers() {
                         <tr class="bg-slate-50 border-b border-slate-200">
                             <th class="px-8 py-6 text-xs font-black uppercase tracking-widest text-slate-400">Athlete Profile</th>
                             <th class="px-8 py-6 text-xs font-black uppercase tracking-widest text-slate-400">Contact Details</th>
-                            <th class="px-8 py-6 text-xs font-black uppercase tracking-widest text-slate-400">Trust Score</th>
                             <th class="px-8 py-6 text-xs font-black uppercase tracking-widest text-slate-400">Account Role</th>
                             <th class="px-8 py-6 text-xs font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
                         </tr>
@@ -396,33 +459,17 @@ function renderAdminUsers() {
                             <tr class="hover:bg-slate-50 transition-colors group">
                                 <td class="px-8 py-6">
                                     <div class="flex items-center gap-4">
-                                        <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center font-black text-slate-900 shadow-sm capitalize border-2 border-white group-hover:bg-primary transition-all relative">
+                                        <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center font-black text-slate-900 border-2 border-white">
                                             ${user.name.charAt(0)}
-                                            ${user.verified ? `
-                                                <div class="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-white text-white">
-                                                    <i data-lucide="check" class="w-3 h-3"></i>
-                                                </div>
-                                            ` : ''}
                                         </div>
                                         <div>
                                             <p class="font-bold text-slate-900 text-lg leading-none">${user.name}</p>
-                                            <p class="text-[10px] text-slate-500 font-extrabold tracking-widest uppercase mt-1.5">Athlete Member</p>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-8 py-6">
                                     <p class="text-sm font-bold text-slate-700">${user.email}</p>
-                                    <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mt-1">${user.phone || 'PHONE NOT PROVIDED'}</p>
-                                </td>
-                                <td class="px-8 py-6">
-                                    <div class="flex items-center gap-3">
-                                        <span class="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${user.verified ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-600'}">
-                                            ${user.verified ? 'Verified' : 'Unverified'}
-                                        </span>
-                                        <button onclick="toggleUserVerification('${user.id}')" class="text-xs font-bold text-slate-400 hover:text-primary-dark underline decoration-2 underline-offset-4">
-                                            ${user.verified ? 'Revoke' : 'Verify Now'}
-                                        </button>
-                                    </div>
+                                    <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mt-1">${user.phone || 'NO PHONE'}</p>
                                 </td>
                                 <td class="px-8 py-6">
                                     <div class="inline-flex items-center gap-2.5 px-3 py-1.5 bg-slate-100 rounded-full">
@@ -431,14 +478,9 @@ function renderAdminUsers() {
                                     </div>
                                 </td>
                                 <td class="px-8 py-6 text-right">
-                                    <div class="flex items-center justify-end gap-3">
-                                        <button onclick="showUpdateUserModal('${user.id}')" class="p-3 bg-slate-100 text-slate-600 rounded-2xl hover:bg-slate-900 hover:text-white transition-all shadow-sm" title="Edit student">
-                                            <i data-lucide="edit-3" class="w-5 h-5"></i>
-                                        </button>
-                                        <button onclick="deleteUser('${user.id}')" class="p-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all shadow-sm" title="Remove student">
-                                            <i data-lucide="trash-2" class="w-5 h-5"></i>
-                                        </button>
-                                    </div>
+                                    <button class="p-3 bg-slate-100 text-slate-600 rounded-2xl hover:bg-slate-900 hover:text-white transition-all">
+                                        <i data-lucide="edit-3" class="w-5 h-5"></i>
+                                    </button>
                                 </td>
                             </tr>
                         `).join('')}
@@ -596,68 +638,76 @@ function copyUPI() {
     Utils.showToast('UPI ID copied!', 'success');
 }
 
-function confirmPayment() {
-    const user = userManager.getCurrentUser();
+async function confirmPayment() {
+    const user = userManager.currentUser;
     if (!user) {
         window.location.href = 'signin.html';
         return;
     }
 
-    const result = bookingManager.createBooking({
-        userId: user.id,
-        userName: user.name,
-        userEmail: user.email,
-        userPhone: user.phone,
-        type: bookingState.type,
-        month: bookingState.month,
-        players: bookingState.players
-    });
+    showLoadingOverlay(true);
+    try {
+        const result = await bookingManager.createBooking({
+            type: bookingState.type,
+            month: bookingState.month,
+            players: bookingState.players,
+            amount: bookingState.amount
+        });
 
-    if (!result.success) {
-        Utils.showToast(result.error, 'error');
-        return;
+        if (!result.success) {
+            Utils.showToast(result.error, 'error');
+            return;
+        }
+
+        // Update confirmation screen
+        const monthEl = document.getElementById('monthSelect');
+        const monthLabel = monthEl ? monthEl.options[monthEl.selectedIndex].textContent : '';
+        const confIds = {
+            id: document.getElementById('confirmBookingId'),
+            type: document.getElementById('confirmType'),
+            month: document.getElementById('confirmMonth'),
+            players: document.getElementById('confirmPlayers'),
+            amount: document.getElementById('confirmAmount')
+        };
+
+        if (confIds.id) confIds.id.textContent = result.booking.id;
+        if (confIds.type) confIds.type.textContent = bookingState.type === 'monthly' ? 'Monthly Pass' : 'Weekly Pass';
+        if (confIds.month) confIds.month.textContent = monthLabel;
+        if (confIds.players) confIds.players.textContent = bookingState.players;
+        const formattedAmount = Utils.formatCurrency(bookingState.amount);
+        if (confIds.amount) confIds.amount.textContent = formattedAmount;
+
+        goToBookingStep(4);
+        Utils.showToast('Booking Securely Created', 'success');
+
+        // Automatically trigger WhatsApp redirection after a short delay
+        setTimeout(() => {
+            sendWhatsAppConfirmation();
+        }, 2000);
+    } catch (error) {
+        Utils.showToast('Booking failed: ' + error.message, 'error');
+    } finally {
+        showLoadingOverlay(false);
     }
-
-    // Auto-confirm since we removed transaction ID entry
-    bookingManager.confirmPayment(result.booking.id, 'MANUAL_VERIFICATION_PENDING');
-
-    // Update confirmation screen
-    const monthEl = document.getElementById('monthSelect');
-    const monthLabel = monthEl ? monthEl.options[monthEl.selectedIndex].textContent : '';
-    const confIds = {
-        id: document.getElementById('confirmBookingId'),
-        type: document.getElementById('confirmType'),
-        month: document.getElementById('confirmMonth'),
-        players: document.getElementById('confirmPlayers'),
-        amount: document.getElementById('confirmAmount')
-    };
-
-    if (confIds.id) confIds.id.textContent = result.booking.id;
-    if (confIds.type) confIds.type.textContent = bookingState.type === 'monthly' ? 'Monthly Pass' : 'Weekly Pass';
-    if (confIds.month) confIds.month.textContent = monthLabel;
-    if (confIds.players) confIds.players.textContent = bookingState.players;
-    const formattedAmount = Utils.formatCurrency(bookingState.amount);
-    if (confIds.amount) confIds.amount.textContent = formattedAmount;
-
-    goToBookingStep(4);
-    Utils.showToast('Booking processing... Redirecting for verification', 'info');
-
-    // Automatically trigger WhatsApp redirection after a short delay
-    setTimeout(() => {
-        sendWhatsAppConfirmation();
-    }, 2000);
 }
 
 // --- Admin Helper Functions ---
 
-function deleteUser(userId) {
+async function deleteUser(userId) {
     if (confirm('Permanently remove this student record? This action cannot be undone.')) {
-        const result = userManager.deleteUser(userId);
-        if (result.success) {
-            Utils.showToast('Student record removed successfully', 'success');
-            renderAdminUsers();
-        } else {
-            Utils.showToast(result.error, 'error');
+        showLoadingOverlay(true);
+        try {
+            const result = await userManager.deleteUser(userId);
+            if (result.success) {
+                Utils.showToast('Student record removed successfully', 'success');
+                await renderAdminUsers();
+            } else {
+                Utils.showToast(result.error, 'error');
+            }
+        } catch (error) {
+            Utils.showToast('Failed to delete user', 'error');
+        } finally {
+            showLoadingOverlay(false);
         }
     }
 }
@@ -672,49 +722,68 @@ function showAddUserModal() {
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-function showUpdateUserModal(userId) {
-    const user = userManager.getUserById(userId);
-    if (!user) return;
+async function showUpdateUserModal(userId) {
+    showLoadingOverlay(true);
+    try {
+        const user = await userManager.getUserById(userId);
+        if (!user) {
+            Utils.showToast('User not found', 'error');
+            return;
+        }
 
-    document.getElementById('modalTitle').textContent = 'Update Athlete';
-    document.getElementById('modalUserId').value = user.id;
-    document.getElementById('modalUserName').value = user.name;
-    document.getElementById('modalUserEmail').value = user.email;
-    document.getElementById('modalUserPassword').value = user.password;
-    document.getElementById('userModal').classList.remove('hidden');
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+        document.getElementById('modalTitle').textContent = 'Update Athlete';
+        document.getElementById('modalUserId').value = user.id;
+        document.getElementById('modalUserName').value = user.name;
+        document.getElementById('modalUserEmail').value = user.email;
+        document.getElementById('modalUserPassword').value = ''; // Don't show password for security
+        document.getElementById('userModal').classList.remove('hidden');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    } catch (error) {
+        Utils.showToast('Failed to load user data', 'error');
+    } finally {
+        showLoadingOverlay(false);
+    }
 }
 
 function hideUserModal() {
     document.getElementById('userModal').classList.add('hidden');
 }
 
-function saveUserFromModal() {
+async function saveUserFromModal() {
     const userId = document.getElementById('modalUserId').value;
     const name = document.getElementById('modalUserName').value;
     const email = document.getElementById('modalUserEmail').value;
     const password = document.getElementById('modalUserPassword').value;
 
-    if (!name || !email || !password) {
-        Utils.showToast('Please fill all fields', 'warning');
+    if (!name || !email || (!userId && !password)) {
+        Utils.showToast('Please fill required fields', 'warning');
         return;
     }
 
-    let result;
-    if (userId) {
-        // Update existing user
-        result = userManager.updateProfile(userId, { name, email, password });
-    } else {
-        // Register new user
-        result = userManager.register({ name, email, password });
-    }
+    showLoadingOverlay(true);
+    try {
+        let result;
+        if (userId) {
+            // Update existing user
+            const updateData = { name, email };
+            if (password) updateData.password = password;
+            result = await userManager.updateProfile(userId, updateData);
+        } else {
+            // Register new user
+            result = await userManager.register({ name, email, password });
+        }
 
-    if (result.success) {
-        Utils.showToast(userId ? 'Student record updated' : 'Student registered successfully', 'success');
-        hideUserModal();
-        renderAdminUsers();
-    } else {
-        Utils.showToast(result.error, 'error');
+        if (result.success) {
+            Utils.showToast(userId ? 'Student record updated' : 'Student registered successfully', 'success');
+            hideUserModal();
+            await renderAdminUsers();
+        } else {
+            Utils.showToast(result.error, 'error');
+        }
+    } catch (error) {
+        Utils.showToast('Failed to save user', 'error');
+    } finally {
+        showLoadingOverlay(false);
     }
 }
 
@@ -728,28 +797,35 @@ function logout() {
     handleLogout();
 }
 
-function toggleUserVerification(userId) {
-    const user = userManager.getUserById(userId);
-    if (!user) return;
+async function toggleUserVerification(userId) {
+    showLoadingOverlay(true);
+    try {
+        const user = await userManager.getUserById(userId);
+        if (!user) return;
 
-    const newStatus = !user.verified;
-    const result = userManager.updateProfile(userId, { verified: newStatus });
+        const newStatus = !user.verified;
+        const result = await userManager.updateProfile(userId, { verified: newStatus });
 
-    if (result.success) {
-        Utils.showToast(`User ${newStatus ? 'Verified' : 'Unverified'} Successfully`, 'success');
-        renderAdminUsers();
-    } else {
-        Utils.showToast(result.error, 'error');
+        if (result.success) {
+            Utils.showToast(`User ${newStatus ? 'Verified' : 'Unverified'} Successfully`, 'success');
+            await renderAdminUsers();
+        } else {
+            Utils.showToast(result.error, 'error');
+        }
+    } catch (error) {
+        Utils.showToast('Failed to toggle verification', 'error');
+    } finally {
+        showLoadingOverlay(false);
     }
 }
 
 function sendWhatsAppConfirmation() {
-    const user = window.userManager.getCurrentUser();
+    const user = window.userManager.currentUser;
     const bookingId = document.getElementById('confirmBookingId').textContent;
     const amount = document.getElementById('confirmAmount').textContent;
     const type = document.getElementById('confirmType').textContent;
 
-    const message = `Hello Academy Admin, I have completed the payment for my Dribble Ground Training.%0A%0A*Reference:* ${bookingId}%0A*Athlete:* ${user.name}%0A*Package:* ${type}%0A*Amount:* ${amount}%0A%0APlease verify my transaction.`;
+    const message = `Hello Academy Admin, I have completed the training payment.%0A%0A*Ref:* ${bookingId}%0A*Athlete:* ${user.name}%0A*Package:* ${type}%0A*Amount:* ${amount}%0A%0APlease verify my cloud transaction.`;
 
     const whatsappUrl = `https://wa.me/918084970887?text=${message}`;
     window.open(whatsappUrl, '_blank');
