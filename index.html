@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Dribble-Ground Academy - Training the next generation of basketball champions.">
     <title>Dribble-Ground Academy</title>
+
+    <!-- Performance Optimization: Resource Hints -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link
@@ -88,11 +96,7 @@
     </nav>
     <!-- Main Content -->
     <main class="flex-grow w-full max-w-[1920px] mx-auto overflow-hidden relative">
-        <!-- Floating Hoop Image (Absolute Position for "Middle/Top" effect) -->
-        <div
-            class="absolute top-0 left-1/2 -translate-x-1/2 lg:translate-x-0 lg:left-[55%] z-30 w-32 md:w-48 opacity-90 mix-blend-multiply pointer-events-none">
-            <img src="assets/hoop.png" alt="Hoop" class="w-full h-auto drop-shadow-2xl brightness-110 contrast-110">
-        </div>
+
 
         <div class="grid grid-cols-1 lg:grid-cols-12 min-h-[calc(100vh-80px)]">
 
@@ -204,7 +208,8 @@
                     <img src="https://i.postimg.cc/bw06QJg5/1111111111111111Gemini-Generated-Image-b9je0gb9je0gb9je.png"
                         alt="Basketball Player"
                         class="w-full h-full object-cover object-top transition-transform duration-1000 group-hover:scale-110"
-                        style="clip-path: circle(50% at 50% 50%);">
+                        style="clip-path: circle(50% at 50% 50%);" loading="eager" decoding="async"
+                        fetchpriority="high">
                 </div>
 
                 <!-- Basketball Net SVG Overlay -->
