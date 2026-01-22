@@ -1,53 +1,19 @@
 {
-  "name": "basketball-booking-system",
+  "name": "dribble-ground-academy",
   "version": "2.0.0",
-  "description": "Production-Grade Basketball Court Booking System",
-  "main": "server.js",
-  "engines": {
-    "node": ">=16.0.0"
-  },
+  "description": "Dribble-Ground Basketball Academy - Court Booking & Training Platform",
+  "private": true,
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server-local.js",
-    "dev:prod": "nodemon server-prod.js",
-    "local": "node server-local.js",
-    "init": "node scripts/init-data.js",
-    "audit": "npm audit",
-    "audit-fix": "npm audit fix",
-    "lint": "eslint . --ext .js",
-    "test": "jest --coverage",
-    "seed": "node scripts/seed-db.js"
-  },
-  "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "compression": "^1.7.4",
-    "cors": "^2.8.5",
-    "dotenv": "^16.0.0",
-    "express": "^4.18.2",
-    "express-async-errors": "^3.1.1",
-    "express-rate-limit": "^6.7.0",
-    "express-validator": "^7.0.0",
-    "helmet": "^7.0.0",
-    "jsonwebtoken": "^9.0.0",
-    "morgan": "^1.10.0",
-    "pg": "^8.11.3",
-    "sequelize": "^6.35.2",
-    "sqlite3": "^5.1.7",
-    "uuid": "^9.0.0"
-  },
-  "devDependencies": {
-    "eslint": "^8.54.0",
-    "jest": "^29.7.0",
-    "nodemon": "^3.0.1",
-    "supertest": "^6.3.3"
+    "dev": "npx serve . -l 3000",
+    "start": "npx serve . -l 3000",
+    "build": "echo 'Static site - no build required'"
   },
   "keywords": [
     "basketball",
+    "academy",
     "booking",
-    "courts",
-    "production",
-    "api"
+    "training"
   ],
-  "author": "Basketball Academy",
+  "author": "Dribble-Ground Academy",
   "license": "MIT"
 }
