@@ -18,6 +18,7 @@ const CONFIG = Object.freeze({
     // Payment
     UPI_ID: '8084970887@ybl',
     PAYMENT_TIMEOUT_HOURS: 24,
+    PHONEPE_MERCHANT_NAME: 'Dribble Ground Academy', // Replace with actual merchant name if available
 
     // Capacity
     MAX_PLAYERS_PER_MONTH: 10,
@@ -200,6 +201,22 @@ const Utils = {
             hash = hash & hash;
         }
         return Math.abs(hash).toString(36);
+    },
+
+    /**
+     * Generate UPI Deep Link for Payment
+     * @param {string} amount - Transaction amount
+     * @param {string} note - Transaction note/description
+     * @returns {string} - UPI deep link
+     */
+    generateUPILink(amount, note = 'Booking Payment') {
+        const upiId = CONFIG.UPI_ID;
+        const name = encodeURIComponent(CONFIG.PHONEPE_MERCHANT_NAME || 'Merchant');
+        const tr = this.generateId(); // Transaction Ref ID
+        const tn = encodeURIComponent(note); // Transaction Note
+
+        // UPI Deep Link Format: upi://pay?pa=UPI_ID&pn=NAME&am=AMOUNT&tn=NOTE&tr=REF_ID&cu=INR
+        return `upi://pay?pa=${upiId}&pn=${name}&am=${amount}&tn=${tn}&tr=${tr}&cu=INR`;
     },
 
     /**

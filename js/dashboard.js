@@ -1303,13 +1303,38 @@ function confirmPayment() {
         if (confirmElements.players) confirmElements.players.textContent = bookingState.players;
         if (confirmElements.amount) confirmElements.amount.textContent = Utils.formatCurrency(bookingState.amount);
 
+        // --- NEW: Add PhonePe Integration ---
+        const paymentContainer = document.getElementById('payment-actions-container');
+        if (paymentContainer) {
+            const upiLink = Utils.generateUPILink(bookingState.amount, `Booking ${result.booking.id}`);
+            const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiLink)}`;
+
+            paymentContainer.innerHTML = `
+                <!-- PhonePe Button -->
+                <a href="${upiLink}" class="block w-full bg-[#5f259f] text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-[#4a1d7c] transition-colors shadow-lg shadow-[#5f259f]/20 mb-6">
+                    <span>Pay via PhonePe</span>
+                    <i data-lucide="smartphone" class="w-5 h-5"></i>
+                </a>
+
+                <!-- QR Scanner Section -->
+                <div class="bg-gray-50 rounded-2xl p-6 border-2 border-dashed border-gray-200 text-center">
+                    <p class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">Or Scan QR Code</p>
+                    <div class="bg-white p-2 rounded-xl border border-gray-200 inline-block shadow-sm">
+                        <img src="${qrCodeUrl}" alt="Payment QR" class="w-48 h-48 rounded-lg">
+                    </div>
+                     <p class="text-[10px] text-gray-400 mt-3">Compatible with PhonePe, GPay, Paytm</p>
+                </div>
+            `;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
         goToBookingStep(4);
         Utils.showToast('Booking Created Successfully!', 'success');
 
         // Trigger WhatsApp confirmation after delay
         setTimeout(() => {
             sendWhatsAppConfirmation();
-        }, 2000);
+        }, 3000);
 
     } catch (error) {
         Utils.showToast('Booking failed: ' + error.message, 'error');
